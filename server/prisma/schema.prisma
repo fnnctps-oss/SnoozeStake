@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  firebaseUid     String    @unique
+  email           String    @unique
+  displayName     String
+  avatarUrl       String?
+  stripeCustomerId String?
+  walletBalance   Decimal   @default(0.00) @db.Decimal(10, 2)
+  totalSnoozed    Decimal   @default(0.00) @db.Decimal(10, 2)
+  totalSaved      Decimal   @default(0.00) @db.Decimal(10, 2)
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  streakStartDate DateTime?
+  referralCode    String    @unique
+  referredBy      String?
+  timezone        String    @default("America/Chicago")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  alarms              Alarm[]
+  snoozeEvents         SnoozeEvent[]
+  wakeUpEvents         WakeUpEvent[]
+  transactions         Transaction[]
+  challengesSent       SnoozeBattle[]       @relation("challenger")
+  challengesReceived   SnoozeBattle[]       @relation("opponent")
+  battlesWon           SnoozeBattle[]       @relation("winner")
+  groupsCreated        AccountabilityGroup[] @relation("groupCreator")
+  groupMemberships     GroupMember[]
+  friendsInitiated     Friendship[]         @relation("friendInitiator")
+  friendsReceived      Friendship[]         @relation("friendReceiver")
+}
+
+model Alarm {
+  id                    String             @id @default(uuid())
+  userId                String
+  label                 String
+  time                  String             // HH:mm format
+  daysOfWeek            Int[]              // 0=Sun, 1=Mon, ..., 6=Sat
+  isEnabled             Boolean            @default(true)
+  snoozeBasePenalty     Decimal            @default(1.00) @db.Decimal(10, 2)
+  useEscalatingPenalty  Boolean            @default(false)
+  maxSnoozes            Int                @default(5)
+  snoozeDurationMinutes Int               @default(5)
+  wakeUpTaskType        WakeUpTaskType     @default(NONE)
+  wakeUpTaskDifficulty  TaskDifficulty     @default(EASY)
+  penaltyDestination    PenaltyDestination @default(SAVINGS)
+  charityId             String?
+  friendRecipientId     String?
+  noEscapeMode          Boolean            @default(false)
+  soundUrl              String?
+  vibrationPattern      String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  charity         Charity?      @relation(fields: [charityId], references: [id])
+  snoozeEvents    SnoozeEvent[]
+  wakeUpEvents    WakeUpEvent[]
+
+  @@index([userId])
+}
+
+model SnoozeEvent {
+  id                String             @id @default(uuid())
+  userId            String
+  alarmId           String
+  snoozedAt         DateTime           @default(now())
+  penaltyAmount     Decimal            @db.Decimal(10, 2)
+  snoozeNumber      Int
+  platformFee       Decimal            @db.Decimal(10, 2)
+  recipientAmount   Decimal            @db.Decimal(10, 2)
+  destination       PenaltyDestination
+  charityId         String?
+  friendRecipientId String?
+  status            PaymentStatus      @default(PENDING)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alarm   Alarm   @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+  charity Charity? @relation(fields: [charityId], references: [id])
+
+  @@index([userId])
+  @@index([alarmId])
+}
+
+model WakeUpEvent {
+  id            String          @id @default(uuid())
+  userId        String
+  alarmId       String
+  wokeUpAt      DateTime        @default(now())
+  snoozeCount   Int             @default(0)
+  totalPenalty  Decimal         @default(0.00) @db.Decimal(10, 2)
+  moneySaved    Decimal         @default(0.00) @db.Decimal(10, 2)
+  taskCompleted WakeUpTaskType?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alarm Alarm @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Charity {
+  id          String  @id @default(uuid())
+  name        String
+  description String
+  logoUrl     String
+  category    String
+  isActive    Boolean @default(true)
+
+  alarms       Alarm[]
+  snoozeEvents SnoozeEvent[]
+}
+
+model SnoozeBattle {
+  id                   String       @id @default(uuid())
+  challengerId         String
+  opponentId           String
+  weekStartDate        DateTime     @db.Date
+  weekEndDate          DateTime     @db.Date
+  betAmount            Decimal      @db.Decimal(10, 2)
+  challengerSnoozeCount Int         @default(0)
+  opponentSnoozeCount  Int          @default(0)
+  status               BattleStatus @default(PENDING)
+  winnerId             String?
+  createdAt            DateTime     @default(now())
+
+  challenger User  @relation("challenger", fields: [challengerId], references: [id])
+  opponent   User  @relation("opponent", fields: [opponentId], references: [id])
+  winner     User? @relation("winner", fields: [winnerId], references: [id])
+
+  @@index([challengerId])
+  @@index([opponentId])
+}
+
+model AccountabilityGroup {
+  id          String   @id @default(uuid())
+  name        String
+  createdById String
+  inviteCode  String   @unique
+  maxMembers  Int      @default(10)
+  createdAt   DateTime @default(now())
+
+  createdBy User          @relation("groupCreator", fields: [createdById], references: [id])
+  members   GroupMember[]
+}
+
+model GroupMember {
+  id       String    @id @default(uuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime  @default(now())
+  role     GroupRole @default(MEMBER)
+
+  group AccountabilityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model Transaction {
+  id                    String            @id @default(uuid())
+  userId                String
+  type                  TransactionType
+  amount                Decimal           @db.Decimal(10, 2)
+  platformFee           Decimal           @default(0.00) @db.Decimal(10, 2)
+  stripePaymentIntentId String?
+  status                PaymentStatus     @default(PENDING)
+  description           String
+  createdAt             DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Friendship {
+  id          String           @id @default(uuid())
+  initiatorId String
+  receiverId  String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+
+  initiator User @relation("friendInitiator", fields: [initiatorId], references: [id])
+  receiver  User @relation("friendReceiver", fields: [receiverId], references: [id])
+
+  @@unique([initiatorId, receiverId])
+}
+
+model Waitlist {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  referralCode  String   @unique
+  referredBy    String?
+  position      Int
+  referralCount Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+// Enums
+
+enum WakeUpTaskType {
+  NONE
+  MATH
+  QR_SCAN
+  PHOTO_SUNLIGHT
+  WALK_STEPS
+  SHAKE_PHONE
+  BARCODE_SCAN
+  TYPING_TEST
+}
+
+enum TaskDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum PenaltyDestination {
+  SAVINGS
+  CHARITY
+  FRIEND
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum BattleStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+enum TransactionType {
+  WALLET_TOPUP
+  SNOOZE_PENALTY
+  SAVINGS_WITHDRAWAL
+  FRIEND_TRANSFER
+  CHARITY_DONATION
+  BATTLE_BET
+  BATTLE_WIN
+  REFUND
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
