@@ -11,10 +11,24 @@ interface AuthState {
   updateUser: (updates: Partial<User>) => void;
 }
 
+// TODO: Remove mock user before production
+const MOCK_USER: User = {
+  id: 'mock-1',
+  email: 'demo@snoozestake.com',
+  displayName: 'Demo User',
+  walletBalance: 25.00,
+  currentStreak: 7,
+  longestStreak: 14,
+  totalSnoozed: 12.50,
+  totalSaved: 42.00,
+  referralCode: 'DEMO2026',
+  createdAt: new Date().toISOString(),
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user: MOCK_USER,
+  token: 'mock-token',
+  isAuthenticated: true,
   setAuth: (user, token) => {
     setAuthToken(token);
     set({ user, token, isAuthenticated: true });

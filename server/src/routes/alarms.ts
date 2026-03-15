@@ -23,7 +23,7 @@ const createAlarmSchema = z.object({
   charityId: z.string().uuid().optional(),
   friendRecipientId: z.string().uuid().optional(),
   noEscapeMode: z.boolean().optional(),
-  soundUrl: z.string().url().optional(),
+  soundUrl: z.string().optional(),
 });
 
 // GET /api/alarms

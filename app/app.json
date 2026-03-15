@@ -28,7 +28,8 @@
     },
     "plugins": [
       "expo-barcode-scanner",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-audio"
     ]
   }
 }

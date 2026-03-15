@@ -26,12 +26,9 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const TASKS: { value: WakeUpTaskType; label: string; icon: string }[] = [
   { value: 'NONE', label: 'None', icon: 'close-circle-outline' },
   { value: 'MATH', label: 'Math', icon: 'calculator-outline' },
-  { value: 'QR_SCAN', label: 'QR Scan', icon: 'qr-code-outline' },
   { value: 'SHAKE_PHONE', label: 'Shake', icon: 'phone-portrait-outline' },
   { value: 'TYPING_TEST', label: 'Typing', icon: 'text-outline' },
-  { value: 'BARCODE_SCAN', label: 'Barcode', icon: 'barcode-outline' },
   { value: 'WALK_STEPS', label: 'Walk', icon: 'walk-outline' },
-  { value: 'PHOTO_SUNLIGHT', label: 'Photo', icon: 'sunny-outline' },
 ];
 const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
 const DESTINATIONS: { value: PenaltyDestination; label: string; icon: string }[] = [
