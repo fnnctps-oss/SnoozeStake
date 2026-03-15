@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
+import { paramStr } from '../utils/params';
 
 export const alarmRouter = Router();
 
@@ -58,13 +59,13 @@ alarmRouter.post('/', async (req: AuthRequest, res, next) => {
 alarmRouter.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const alarm = await prisma.alarm.findFirst({
-      where: { id: req.params.id, userId: req.userId! },
+      where: { id: paramStr(req.params.id), userId: req.userId! },
     });
     if (!alarm) throw new AppError(404, 'Alarm not found');
 
     const body = createAlarmSchema.partial().parse(req.body);
     const updated = await prisma.alarm.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: body,
     });
     res.json({ alarm: updated });
@@ -77,11 +78,11 @@ alarmRouter.put('/:id', async (req: AuthRequest, res, next) => {
 alarmRouter.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const alarm = await prisma.alarm.findFirst({
-      where: { id: req.params.id, userId: req.userId! },
+      where: { id: paramStr(req.params.id), userId: req.userId! },
     });
     if (!alarm) throw new AppError(404, 'Alarm not found');
 
-    await prisma.alarm.delete({ where: { id: req.params.id } });
+    await prisma.alarm.delete({ where: { id: paramStr(req.params.id) } });
     res.json({ message: 'Alarm deleted' });
   } catch (err) {
     next(err);
@@ -92,12 +93,12 @@ alarmRouter.delete('/:id', async (req: AuthRequest, res, next) => {
 alarmRouter.post('/:id/toggle', async (req: AuthRequest, res, next) => {
   try {
     const alarm = await prisma.alarm.findFirst({
-      where: { id: req.params.id, userId: req.userId! },
+      where: { id: paramStr(req.params.id), userId: req.userId! },
     });
     if (!alarm) throw new AppError(404, 'Alarm not found');
 
     const updated = await prisma.alarm.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: { isEnabled: !alarm.isEnabled },
     });
     res.json({ alarm: updated });

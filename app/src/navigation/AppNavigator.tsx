@@ -12,10 +12,15 @@ import { CreateAlarmScreen } from '../screens/CreateAlarmScreen';
 import { AlarmRingingScreen } from '../screens/AlarmRingingScreen';
 import { WakeUpTaskScreen } from '../screens/WakeUpTaskScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
-import { SocialScreen } from '../screens/SocialScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { WalletScreen } from '../screens/WalletScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { SocialFeedScreen } from '../screens/SocialFeedScreen';
+import { BattleListScreen } from '../screens/BattleListScreen';
+import { GroupListScreen } from '../screens/GroupListScreen';
+import { FriendListScreen } from '../screens/FriendListScreen';
+import { CharityScreen } from '../screens/CharityScreen';
+import { AchievementsScreen } from '../screens/AchievementsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -55,6 +60,24 @@ function StatsStack() {
       }}
     >
       <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Stats' }} />
+      <Stack.Screen name="Charity" component={CharityScreen} options={{ title: 'Charities' }} />
+    </Stack.Navigator>
+  );
+}
+
+function SocialStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Screen name="SocialFeed" component={SocialFeedScreen} options={{ title: 'Social' }} />
+      <Stack.Screen name="Battles" component={BattleListScreen} options={{ title: 'Battles' }} />
+      <Stack.Screen name="Groups" component={GroupListScreen} options={{ title: 'Groups' }} />
+      <Stack.Screen name="Friends" component={FriendListScreen} options={{ title: 'Friends' }} />
     </Stack.Navigator>
   );
 }
@@ -70,6 +93,7 @@ function ProfileStack() {
     >
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ title: 'Wallet' }} />
+      <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ title: 'Achievements' }} />
     </Stack.Navigator>
   );
 }
@@ -114,7 +138,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="SocialTab"
-        component={SocialScreen}
+        component={SocialStack}
         options={{
           title: 'Social',
           tabBarIcon: ({ focused }) => <TabIcon label="👥" focused={focused} />,

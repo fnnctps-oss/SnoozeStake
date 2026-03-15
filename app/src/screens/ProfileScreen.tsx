@@ -75,7 +75,10 @@ export function ProfileScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Achievements')}
+        >
           <Text style={styles.menuIcon}>🏆</Text>
           <Text style={styles.menuText}>Achievements</Text>
           <Text style={styles.menuArrow}>→</Text>

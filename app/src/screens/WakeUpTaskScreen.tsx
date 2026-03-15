@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,87 +9,101 @@ import {
   Vibration,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { Accelerometer, Pedometer } from 'expo-sensors';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { snoozeApi } from '../services/api';
 
-interface MathProblem {
-  question: string;
-  answer: number;
-}
+// ===== MATH TASK =====
+interface MathProblem { question: string; answer: number; }
 
 function generateMathProblem(difficulty: string): MathProblem {
   const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
   if (difficulty === 'EASY') {
-    const a = rand(1, 20);
-    const b = rand(1, 20);
+    const a = rand(1, 20), b = rand(1, 20);
     const op = Math.random() > 0.5 ? '+' : '-';
-    return {
-      question: `${a} ${op} ${b}`,
-      answer: op === '+' ? a + b : a - b,
-    };
+    return { question: `${a} ${op} ${b}`, answer: op === '+' ? a + b : a - b };
   } else if (difficulty === 'MEDIUM') {
-    const a = rand(2, 12);
-    const b = rand(2, 12);
+    const a = rand(2, 12), b = rand(2, 12);
     return { question: `${a} × ${b}`, answer: a * b };
   } else {
-    const a = rand(10, 50);
-    const b = rand(2, 9);
-    const c = rand(1, 20);
+    const a = rand(10, 50), b = rand(2, 9), c = rand(1, 20);
     return { question: `${a} × ${b} + ${c}`, answer: a * b + c };
   }
 }
 
+// ===== TYPING TASK =====
+const TYPING_SENTENCES = [
+  'The quick brown fox jumps over the lazy dog',
+  'Every morning is a fresh start to be better',
+  'Success is not final failure is not fatal',
+  'Rise and grind the early bird catches the worm',
+  'Discipline is choosing between what you want now and what you want most',
+  'Good things come to those who wake up early',
+  'Today is going to be an amazing productive day',
+  'The secret of getting ahead is getting started',
+];
+
+function getTypingSentence(difficulty: string): string {
+  const sentence = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
+  if (difficulty === 'EASY') return sentence.split(' ').slice(0, 5).join(' ');
+  if (difficulty === 'MEDIUM') return sentence;
+  return sentence + ' ' + TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
+}
+
+// ===== MAIN COMPONENT =====
 export function WakeUpTaskScreen({ navigation, route }: any) {
   const { alarm, snoozeCount, totalPenalty } = route.params;
-  const [problem, setProblem] = useState<MathProblem>(
-    generateMathProblem(alarm.wakeUpTaskDifficulty || 'EASY')
-  );
-  const [answer, setAnswer] = useState('');
-  const [attempts, setAttempts] = useState(0);
+  const taskType = alarm.wakeUpTaskType || 'MATH';
+  const difficulty = alarm.wakeUpTaskDifficulty || 'EASY';
 
   useEffect(() => {
     Vibration.vibrate([300, 300], true);
     return () => Vibration.cancel();
   }, []);
 
+  const completeTask = async () => {
+    Vibration.cancel();
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await snoozeApi.wake({
+        alarmId: alarm.id,
+        snoozeCount,
+        totalPenalty,
+        taskCompleted: taskType,
+      });
+    } catch {}
+    Alert.alert('Great job!', 'Good morning!', [
+      { text: 'OK', onPress: () => navigation.popToTop() },
+    ]);
+  };
+
+  if (taskType === 'MATH') return <MathTask difficulty={difficulty} onComplete={completeTask} />;
+  if (taskType === 'SHAKE_PHONE') return <ShakeTask difficulty={difficulty} onComplete={completeTask} />;
+  if (taskType === 'TYPING_TEST') return <TypingTask difficulty={difficulty} onComplete={completeTask} />;
+  if (taskType === 'WALK_STEPS') return <WalkTask difficulty={difficulty} onComplete={completeTask} />;
+
+  // Fallback for QR_SCAN, PHOTO_SUNLIGHT, BARCODE_SCAN — show math as fallback
+  return <MathTask difficulty={difficulty} onComplete={completeTask} />;
+}
+
+// ===== MATH COMPONENT =====
+function MathTask({ difficulty, onComplete }: { difficulty: string; onComplete: () => void }) {
+  const [problem, setProblem] = useState(generateMathProblem(difficulty));
+  const [answer, setAnswer] = useState('');
+  const [attempts, setAttempts] = useState(0);
+
   const handleSubmit = async () => {
     const userAnswer = parseInt(answer, 10);
-    if (isNaN(userAnswer)) {
-      Alert.alert('Error', 'Please enter a number');
-      return;
-    }
-
+    if (isNaN(userAnswer)) { Alert.alert('Error', 'Please enter a number'); return; }
     if (userAnswer === problem.answer) {
-      Vibration.cancel();
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      try {
-        await snoozeApi.wake({
-          alarmId: alarm.id,
-          snoozeCount,
-          totalPenalty,
-          taskCompleted: alarm.wakeUpTaskType,
-        });
-      } catch {
-        // Non-critical
-      }
-
-      Alert.alert('Great job!', 'You solved it! Good morning!', [
-        { text: 'OK', onPress: () => navigation.popToTop() },
-      ]);
+      onComplete();
     } else {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setAttempts((a) => a + 1);
       setAnswer('');
-
       if (attempts >= 2) {
-        // Generate a new problem after 3 failed attempts
-        setProblem(generateMathProblem(alarm.wakeUpTaskDifficulty || 'EASY'));
+        setProblem(generateMathProblem(difficulty));
         setAttempts(0);
-        Alert.alert('New Problem', "Here's a new one. Keep trying!");
-      } else {
-        Alert.alert('Wrong!', 'Try again. You need to get this right to dismiss.');
       }
     }
   };
@@ -97,14 +111,10 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Solve to Dismiss</Text>
-      <Text style={styles.subtitle}>
-        {alarm.wakeUpTaskDifficulty || 'EASY'} Math Problem
-      </Text>
-
-      <View style={styles.problemCard}>
-        <Text style={styles.problemText}>{problem.question} = ?</Text>
+      <Text style={styles.subtitle}>{difficulty} Math Problem</Text>
+      <View style={styles.taskCard}>
+        <Text style={styles.mathText}>{problem.question} = ?</Text>
       </View>
-
       <TextInput
         style={styles.input}
         value={answer}
@@ -114,14 +124,153 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
         placeholderTextColor={colors.textMuted}
         autoFocus
       />
-
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
-
-      <Text style={styles.attempts}>
-        {attempts > 0 ? `Wrong attempts: ${attempts}/3` : 'Enter the correct answer'}
+      <Text style={styles.hint}>
+        {attempts > 0 ? `Wrong: ${attempts}/3` : 'Enter the correct answer'}
       </Text>
+    </View>
+  );
+}
+
+// ===== SHAKE COMPONENT =====
+function ShakeTask({ difficulty, onComplete }: { difficulty: string; onComplete: () => void }) {
+  const targetDuration = difficulty === 'EASY' ? 10 : difficulty === 'MEDIUM' ? 20 : 30;
+  const [shakeTime, setShakeTime] = useState(0);
+  const shakeTimeRef = useRef(0);
+  const threshold = 2.5;
+
+  useEffect(() => {
+    const sub = Accelerometer.addListener(({ x, y, z }) => {
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      if (magnitude > threshold) {
+        shakeTimeRef.current += 0.1;
+        setShakeTime(Math.floor(shakeTimeRef.current));
+        if (shakeTimeRef.current >= targetDuration) {
+          sub.remove();
+          onComplete();
+        }
+      }
+    });
+    Accelerometer.setUpdateInterval(100);
+    return () => sub.remove();
+  }, []);
+
+  const progress = Math.min(shakeTime / targetDuration, 1);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Shake Your Phone!</Text>
+      <Text style={styles.subtitle}>Shake vigorously for {targetDuration} seconds</Text>
+      <View style={styles.taskCard}>
+        <Text style={styles.bigNumber}>{Math.floor(shakeTime)}s</Text>
+        <Text style={styles.taskSubtext}>of {targetDuration}s</Text>
+      </View>
+      <View style={styles.progressBar}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
+      <Text style={styles.hint}>Keep shaking!</Text>
+    </View>
+  );
+}
+
+// ===== TYPING COMPONENT =====
+function TypingTask({ difficulty, onComplete }: { difficulty: string; onComplete: () => void }) {
+  const [sentence] = useState(getTypingSentence(difficulty));
+  const [typed, setTyped] = useState('');
+
+  const handleChange = (text: string) => {
+    setTyped(text);
+    if (text.toLowerCase().trim() === sentence.toLowerCase().trim()) {
+      onComplete();
+    }
+  };
+
+  const getCharColor = (index: number) => {
+    if (index >= typed.length) return colors.textMuted;
+    return typed[index].toLowerCase() === sentence[index].toLowerCase()
+      ? colors.accent
+      : colors.danger;
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Type to Dismiss</Text>
+      <Text style={styles.subtitle}>Type the sentence below exactly</Text>
+      <View style={styles.taskCard}>
+        <Text style={styles.typingTarget}>
+          {sentence.split('').map((char, i) => (
+            <Text key={i} style={{ color: getCharColor(i) }}>{char}</Text>
+          ))}
+        </Text>
+      </View>
+      <TextInput
+        style={styles.input}
+        value={typed}
+        onChangeText={handleChange}
+        placeholder="Start typing..."
+        placeholderTextColor={colors.textMuted}
+        autoCorrect={false}
+        autoCapitalize="none"
+        autoFocus
+      />
+      <Text style={styles.hint}>
+        {typed.length}/{sentence.length} characters
+      </Text>
+    </View>
+  );
+}
+
+// ===== WALK COMPONENT =====
+function WalkTask({ difficulty, onComplete }: { difficulty: string; onComplete: () => void }) {
+  const targetSteps = difficulty === 'EASY' ? 20 : difficulty === 'MEDIUM' ? 50 : 100;
+  const [steps, setSteps] = useState(0);
+  const [available, setAvailable] = useState(true);
+
+  useEffect(() => {
+    Pedometer.isAvailableAsync().then((avail) => {
+      if (!avail) {
+        setAvailable(false);
+        return;
+      }
+
+      const sub = Pedometer.watchStepCount((result) => {
+        setSteps(result.steps);
+        if (result.steps >= targetSteps) {
+          sub.remove();
+          onComplete();
+        }
+      });
+
+      return () => sub.remove();
+    });
+  }, []);
+
+  if (!available) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Pedometer Not Available</Text>
+        <Text style={styles.subtitle}>Falling back to math task</Text>
+        <MathTask difficulty={difficulty} onComplete={onComplete} />
+      </View>
+    );
+  }
+
+  const progress = Math.min(steps / targetSteps, 1);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Walk to Dismiss</Text>
+      <Text style={styles.subtitle}>Take {targetSteps} steps</Text>
+      <View style={styles.taskCard}>
+        <Text style={styles.bigNumber}>{steps}</Text>
+        <Text style={styles.taskSubtext}>of {targetSteps} steps</Text>
+      </View>
+      <View style={styles.progressBar}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
+      <Text style={styles.hint}>Start walking!</Text>
     </View>
   );
 }
@@ -146,24 +295,39 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: spacing.xl,
   },
-  problemCard: {
+  taskCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     padding: spacing.xxl,
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  problemText: {
+  mathText: {
     fontSize: fontSize.hero,
     fontWeight: '800',
     color: colors.accent,
+  },
+  bigNumber: {
+    fontSize: 72,
+    fontWeight: '800',
+    color: colors.accent,
+  },
+  taskSubtext: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  typingTarget: {
+    fontSize: fontSize.lg,
+    lineHeight: 28,
+    fontFamily: 'monospace',
   },
   input: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
     color: colors.text,
-    fontSize: fontSize.xxl,
+    fontSize: fontSize.xl,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: spacing.lg,
@@ -179,10 +343,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.background,
   },
-  attempts: {
+  hint: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.lg,
+  },
+  progressBar: {
+    height: 12,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: spacing.lg,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.accent,
+    borderRadius: 6,
   },
 });

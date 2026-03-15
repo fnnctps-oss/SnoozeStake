@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(gh repo:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git status:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(for f:*)",
+      "Bash(do sed:*)",
+      "Bash(sed -i '' 's/req\\\\.params\\\\.id/paramStr\\(req.params.id\\)/g' \"$f\")",
+      "Bash(done)"
+    ]
+  }
+}

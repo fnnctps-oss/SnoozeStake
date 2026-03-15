@@ -81,3 +81,55 @@ export const statsApi = {
   dashboard: () => request<any>('/stats/dashboard'),
   history: (page = 1) => request<any>(`/stats/history?page=${page}`),
 };
+
+// Friends
+export const friendApi = {
+  list: () => request<{ friends: any[] }>('/friends'),
+  pending: () => request<{ pending: any[] }>('/friends/pending'),
+  invite: (identifier: string) =>
+    request<any>('/friends/invite', { method: 'POST', body: JSON.stringify({ identifier }) }),
+  accept: (id: string) =>
+    request<any>(`/friends/accept/${id}`, { method: 'POST' }),
+  decline: (id: string) =>
+    request<any>(`/friends/decline/${id}`, { method: 'POST' }),
+  remove: (id: string) =>
+    request<any>(`/friends/${id}`, { method: 'DELETE' }),
+};
+
+// Battles
+export const battleApi = {
+  list: () => request<{ battles: any[] }>('/battles'),
+  get: (id: string) => request<{ battle: any }>(`/battles/${id}`),
+  create: (opponentId: string, betAmount: number) =>
+    request<{ battle: any }>('/battles', { method: 'POST', body: JSON.stringify({ opponentId, betAmount }) }),
+  accept: (id: string) =>
+    request<any>(`/battles/${id}/accept`, { method: 'POST' }),
+  decline: (id: string) =>
+    request<any>(`/battles/${id}/decline`, { method: 'POST' }),
+};
+
+// Groups
+export const groupApi = {
+  list: () => request<{ groups: any[] }>('/groups'),
+  get: (id: string) => request<any>(`/groups/${id}`),
+  create: (name: string) =>
+    request<{ group: any }>('/groups', { method: 'POST', body: JSON.stringify({ name }) }),
+  join: (inviteCode: string) =>
+    request<any>('/groups/join', { method: 'POST', body: JSON.stringify({ inviteCode }) }),
+  leave: (id: string) =>
+    request<any>(`/groups/${id}/leave`, { method: 'POST' }),
+  remove: (id: string) =>
+    request<any>(`/groups/${id}`, { method: 'DELETE' }),
+};
+
+// Charities
+export const charityApi = {
+  list: () => request<{ charities: any[] }>('/charities'),
+  get: (id: string) => request<any>(`/charities/${id}`),
+  impact: () => request<any>('/charities/user/impact'),
+};
+
+// Feed
+export const feedApi = {
+  get: (page = 1) => request<{ feed: any[] }>(`/feed?page=${page}`),
+};
