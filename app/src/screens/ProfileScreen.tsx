@@ -84,13 +84,28 @@ export function ProfileScreen({ navigation }: any) {
           <Text style={styles.menuArrow}>→</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Referral')}
+        >
           <Text style={styles.menuIcon}>🔗</Text>
           <Text style={styles.menuText}>Referral Code</Text>
           <Text style={styles.menuValue}>{user?.referralCode}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('ShareCard')}
+        >
+          <Text style={styles.menuIcon}>🎴</Text>
+          <Text style={styles.menuText}>Share Card</Text>
+          <Text style={styles.menuArrow}>→</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Settings')}
+        >
           <Text style={styles.menuIcon}>⚙️</Text>
           <Text style={styles.menuText}>Settings</Text>
           <Text style={styles.menuArrow}>→</Text>

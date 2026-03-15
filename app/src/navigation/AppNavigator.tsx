@@ -21,6 +21,10 @@ import { GroupListScreen } from '../screens/GroupListScreen';
 import { FriendListScreen } from '../screens/FriendListScreen';
 import { CharityScreen } from '../screens/CharityScreen';
 import { AchievementsScreen } from '../screens/AchievementsScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { ReferralScreen } from '../screens/ReferralScreen';
+import { ShareCardScreen } from '../screens/ShareCardScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -94,6 +98,9 @@ function ProfileStack() {
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ title: 'Wallet' }} />
       <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ title: 'Achievements' }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: 'Refer a Friend' }} />
+      <Stack.Screen name="ShareCard" component={ShareCardScreen} options={{ title: 'Share Card' }} />
     </Stack.Navigator>
   );
 }
@@ -158,6 +165,15 @@ function MainTabs() {
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [hasOnboarded, setHasOnboarded] = React.useState(false);
+
+  if (isAuthenticated && !hasOnboarded) {
+    return (
+      <NavigationContainer>
+        <OnboardingScreen onComplete={() => setHasOnboarded(true)} />
+      </NavigationContainer>
+    );
+  }
 
   return (
     <NavigationContainer>

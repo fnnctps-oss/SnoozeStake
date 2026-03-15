@@ -14,10 +14,14 @@ import { charityRouter } from './routes/charities';
 import { battleRouter } from './routes/battles';
 import { groupRouter } from './routes/groups';
 import { feedRouter } from './routes/feed';
+import { sharingRouter } from './routes/sharing';
+import { referralRouter } from './routes/referral';
+import { notificationRouter } from './routes/notifications';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSnoozeAlerts } from './websocket/snoozeAlerts';
 import { resolveBattles } from './jobs/battleResolution';
 import { checkStreaks } from './jobs/streakCheck';
+import { sendMorningReports } from './jobs/morningReport';
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,6 +44,9 @@ app.use('/api/charities', charityRouter);
 app.use('/api/battles', battleRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/feed', feedRouter);
+app.use('/api/share', sharingRouter);
+app.use('/api/referral', referralRouter);
+app.use('/api/notifications', notificationRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -79,6 +86,12 @@ cron.schedule('0 0 * * 1', () => {
 cron.schedule('59 23 * * *', () => {
   console.log('Running streak check...');
   checkStreaks().catch(console.error);
+});
+
+// Morning report: noon daily
+cron.schedule('0 12 * * *', () => {
+  console.log('Sending morning reports...');
+  sendMorningReports().catch(console.error);
 });
 
 const PORT = process.env.PORT || 3000;
