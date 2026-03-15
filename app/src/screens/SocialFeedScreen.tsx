@@ -10,6 +10,7 @@ import {
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { feedApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { Icon, IconBubble } from '../components/Icon';
 
 export function SocialFeedScreen({ navigation }: any) {
   const userId = useAuthStore((s) => s.user?.id);
@@ -46,15 +47,15 @@ export function SocialFeedScreen({ navigation }: any) {
       {/* Quick Nav */}
       <View style={styles.navRow}>
         <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Battles')}>
-          <Text style={styles.navIcon}>⚔️</Text>
+          <Icon name="flash-outline" size={24} color={colors.danger} />
           <Text style={styles.navLabel}>Battles</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Groups')}>
-          <Text style={styles.navIcon}>🤝</Text>
+          <Icon name="people-circle-outline" size={24} color={colors.accent} />
           <Text style={styles.navLabel}>Groups</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Friends')}>
-          <Text style={styles.navIcon}>👤</Text>
+          <Icon name="person-add-outline" size={24} color={colors.primaryLight} />
           <Text style={styles.navLabel}>Friends</Text>
         </TouchableOpacity>
       </View>
@@ -72,9 +73,12 @@ export function SocialFeedScreen({ navigation }: any) {
 
           return (
             <View style={styles.feedItem}>
-              <View style={[styles.icon, isSnooze ? styles.snoozeIcon : styles.wakeIcon]}>
-                <Text style={styles.iconText}>{isSnooze ? '💤' : '☀️'}</Text>
-              </View>
+              <IconBubble
+                name={isSnooze ? 'moon-outline' : 'sunny-outline'}
+                size={20}
+                color={isSnooze ? colors.danger : colors.accent}
+                bgColor={isSnooze ? colors.danger + '20' : colors.accent + '20'}
+              />
               <View style={styles.feedContent}>
                 <Text style={styles.feedText}>
                   <Text style={styles.feedName}>
@@ -93,6 +97,7 @@ export function SocialFeedScreen({ navigation }: any) {
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <Icon name="chatbubbles-outline" size={64} color={colors.textMuted} />
             <Text style={styles.emptyText}>No activity yet</Text>
             <Text style={styles.emptySubtext}>
               Add friends to see their morning activity
@@ -115,16 +120,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     alignItems: 'center',
   },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  snoozeIcon: { backgroundColor: colors.danger + '20' },
-  wakeIcon: { backgroundColor: colors.accent + '20' },
-  iconText: { fontSize: 20 },
   feedContent: { flex: 1 },
   feedText: { fontSize: fontSize.sm, color: colors.text, lineHeight: 20 },
   feedName: { fontWeight: '700' },
@@ -141,10 +136,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
+    gap: 4,
   },
-  navIcon: { fontSize: 24 },
-  navLabel: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 4, fontWeight: '600' },
-  empty: { alignItems: 'center', paddingTop: 100 },
+  navLabel: { fontSize: fontSize.xs, color: colors.textSecondary, fontWeight: '600' },
+  empty: { alignItems: 'center', paddingTop: 100, gap: spacing.sm },
   emptyText: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
-  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary },
 });

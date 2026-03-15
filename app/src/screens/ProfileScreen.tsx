@@ -9,14 +9,7 @@ import {
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
-
-const LEVELS = [
-  { name: 'Beginner', minXp: 0 },
-  { name: 'Early Bird', minXp: 100 },
-  { name: 'Sunrise Warrior', minXp: 500 },
-  { name: 'Alarm Slayer', minXp: 2000 },
-  { name: 'Morning Legend', minXp: 10000 },
-];
+import { Icon, IconBubble } from '../components/Icon';
 
 export function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuthStore();
@@ -68,7 +61,7 @@ export function ProfileScreen({ navigation }: any) {
           style={styles.menuItem}
           onPress={() => navigation.navigate('Wallet')}
         >
-          <Text style={styles.menuIcon}>💰</Text>
+          <IconBubble name="wallet-outline" size={20} color={colors.accent} bgColor={colors.accent + '20'} />
           <Text style={styles.menuText}>Wallet</Text>
           <Text style={styles.menuValue}>
             ${Number(user?.walletBalance || 0).toFixed(2)}
@@ -79,16 +72,16 @@ export function ProfileScreen({ navigation }: any) {
           style={styles.menuItem}
           onPress={() => navigation.navigate('Achievements')}
         >
-          <Text style={styles.menuIcon}>🏆</Text>
+          <IconBubble name="trophy-outline" size={20} color={colors.warning} bgColor={colors.warning + '20'} />
           <Text style={styles.menuText}>Achievements</Text>
-          <Text style={styles.menuArrow}>→</Text>
+          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('Referral')}
         >
-          <Text style={styles.menuIcon}>🔗</Text>
+          <IconBubble name="git-network-outline" size={20} color={colors.primaryLight} bgColor={colors.primary + '20'} />
           <Text style={styles.menuText}>Referral Code</Text>
           <Text style={styles.menuValue}>{user?.referralCode}</Text>
         </TouchableOpacity>
@@ -97,22 +90,23 @@ export function ProfileScreen({ navigation }: any) {
           style={styles.menuItem}
           onPress={() => navigation.navigate('ShareCard')}
         >
-          <Text style={styles.menuIcon}>🎴</Text>
+          <IconBubble name="share-social-outline" size={20} color="#FF9F43" bgColor="#FF9F4320" />
           <Text style={styles.menuText}>Share Card</Text>
-          <Text style={styles.menuArrow}>→</Text>
+          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Text style={styles.menuIcon}>⚙️</Text>
+          <IconBubble name="settings-outline" size={20} color={colors.textSecondary} bgColor={colors.surfaceLight} />
           <Text style={styles.menuText}>Settings</Text>
-          <Text style={styles.menuArrow}>→</Text>
+          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Icon name="log-out-outline" size={18} color={colors.danger} />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -194,7 +188,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
-  menuIcon: { fontSize: 24 },
   menuText: {
     flex: 1,
     fontSize: fontSize.md,
@@ -206,10 +199,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
-  menuArrow: {
-    fontSize: fontSize.md,
-    color: colors.textMuted,
-  },
   logoutButton: {
     marginTop: spacing.xl,
     padding: spacing.md,
@@ -217,6 +206,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.danger,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   logoutText: {
     color: colors.danger,

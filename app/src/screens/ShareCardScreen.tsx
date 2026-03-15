@@ -5,23 +5,23 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Share,
   ActivityIndicator,
   Image,
 } from 'react-native';
 import { cacheDirectory, downloadAsync } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
+import { Icon } from '../components/Icon';
 
 const API_BASE = __DEV__
   ? 'http://localhost:3000/api'
   : 'https://api.snoozestake.com/api';
 
 const CARD_TYPES = [
-  { id: 'weekly', label: 'Weekly Report', emoji: '📊', endpoint: '/share/weekly-card' },
-  { id: 'streak', label: 'Streak Achievement', emoji: '🔥', endpoint: '/share/streak-card' },
-  { id: 'death', label: 'Streak Death', emoji: '⚰️', endpoint: '/share/death-card' },
-  { id: 'charity', label: 'Charity Impact', emoji: '💝', endpoint: '/share/charity-card' },
+  { id: 'weekly', label: 'Weekly Report', iconName: 'bar-chart-outline', iconColor: '#3498DB', endpoint: '/share/weekly-card' },
+  { id: 'streak', label: 'Streak Achievement', iconName: 'flame', iconColor: '#FF6B35', endpoint: '/share/streak-card' },
+  { id: 'death', label: 'Streak Death', iconName: 'skull-outline', iconColor: '#E74C3C', endpoint: '/share/death-card' },
+  { id: 'charity', label: 'Charity Impact', iconName: 'heart-outline', iconColor: '#E91E63', endpoint: '/share/charity-card' },
 ];
 
 export function ShareCardScreen() {
@@ -74,7 +74,9 @@ export function ShareCardScreen() {
               <ActivityIndicator color={colors.primary} size="large" />
             ) : (
               <>
-                <Text style={styles.cardEmoji}>{card.emoji}</Text>
+                <View style={[styles.cardIconWrap, { backgroundColor: card.iconColor + '20' }]}>
+                  <Icon name={card.iconName} size={32} color={card.iconColor} />
+                </View>
                 <Text style={styles.cardLabel}>{card.label}</Text>
               </>
             )}
@@ -94,6 +96,7 @@ export function ShareCardScreen() {
       )}
 
       <View style={styles.infoBox}>
+        <Icon name="information-circle-outline" size={18} color={colors.textSecondary} />
         <Text style={styles.infoText}>
           Every card includes your referral code. When someone downloads
           SnoozeStake through your card, you both get $1 free!
@@ -130,9 +133,16 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
+    minHeight: 130,
+    gap: spacing.sm,
   },
-  cardEmoji: { fontSize: 40, marginBottom: spacing.sm },
+  cardIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardLabel: { fontSize: fontSize.sm, color: colors.text, fontWeight: '600', textAlign: 'center' },
   previewSection: { marginTop: spacing.xl },
   previewTitle: { fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.sm },
@@ -147,6 +157,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginTop: spacing.xl,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
   },
-  infoText: { fontSize: fontSize.xs, color: colors.textSecondary, lineHeight: 20 },
+  infoText: { fontSize: fontSize.xs, color: colors.textSecondary, lineHeight: 20, flex: 1 },
 });

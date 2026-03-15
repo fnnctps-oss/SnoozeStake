@@ -12,6 +12,7 @@ import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAlarmStore } from '../store/alarmStore';
 import { alarmApi } from '../services/api';
 import { Alarm } from '../types';
+import { Icon } from '../components/Icon';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -112,7 +113,7 @@ export function AlarmListScreen({ navigation }: any) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>⏰</Text>
+            <Icon name="alarm-outline" size={64} color={colors.textMuted} />
             <Text style={styles.emptyText}>No alarms yet</Text>
             <Text style={styles.emptySubtext}>
               Create your first alarm and put real money on the line!
@@ -125,7 +126,7 @@ export function AlarmListScreen({ navigation }: any) {
         style={styles.fab}
         onPress={() => navigation.navigate('CreateAlarm')}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Icon name="add" size={28} color={colors.text} />
       </TouchableOpacity>
     </View>
   );
@@ -219,10 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 100,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   emptyText: {
     fontSize: fontSize.xl,
@@ -233,7 +231,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.sm,
     paddingHorizontal: spacing.xl,
   },
   fab: {
@@ -251,11 +248,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
-  },
-  fabText: {
-    fontSize: 28,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
   },
 });

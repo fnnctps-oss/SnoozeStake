@@ -9,15 +9,16 @@ import {
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { charityApi } from '../services/api';
+import { Icon, IconBubble } from '../components/Icon';
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  'Clean Water': '💧',
-  'Education': '📚',
-  'Environment': '🌍',
-  'Health': '🏥',
-  'Hunger': '🍽️',
-  'Animals': '🐾',
-  'Housing': '🏠',
+const CATEGORY_ICONS: Record<string, { name: string; color: string }> = {
+  'Clean Water': { name: 'water-outline', color: '#3498DB' },
+  'Education': { name: 'book-outline', color: '#9B59B6' },
+  'Environment': { name: 'earth-outline', color: '#27AE60' },
+  'Health': { name: 'medkit-outline', color: '#E74C3C' },
+  'Hunger': { name: 'restaurant-outline', color: '#F39C12' },
+  'Animals': { name: 'paw-outline', color: '#E67E22' },
+  'Housing': { name: 'home-outline', color: '#1ABC9C' },
 };
 
 export function CharityScreen() {
@@ -49,6 +50,7 @@ export function CharityScreen() {
       {/* Impact Summary */}
       {impact && (
         <View style={styles.impactCard}>
+          <Icon name="heart-outline" size={32} color={colors.accent} />
           <Text style={styles.impactTitle}>Your Charity Impact</Text>
           <Text style={styles.impactAmount}>
             ${impact.totalDonated?.toFixed(2) || '0.00'}
@@ -67,20 +69,27 @@ export function CharityScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.charityCard}>
-            <Text style={styles.charityEmoji}>
-              {CATEGORY_EMOJIS[item.category] || '💝'}
-            </Text>
-            <View style={styles.charityInfo}>
-              <Text style={styles.charityName}>{item.name}</Text>
-              <Text style={styles.charityCategory}>{item.category}</Text>
-              <Text style={styles.charityDesc} numberOfLines={2}>
-                {item.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const iconInfo = CATEGORY_ICONS[item.category] || { name: 'heart-outline', color: colors.primaryLight };
+          return (
+            <TouchableOpacity style={styles.charityCard}>
+              <IconBubble
+                name={iconInfo.name}
+                size={24}
+                color={iconInfo.color}
+                bgColor={iconInfo.color + '20'}
+                bubbleSize={48}
+              />
+              <View style={styles.charityInfo}>
+                <Text style={styles.charityName}>{item.name}</Text>
+                <Text style={styles.charityCategory}>{item.category}</Text>
+                <Text style={styles.charityDesc} numberOfLines={2}>
+                  {item.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No charities available</Text>
         }
@@ -99,10 +108,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.accent + '30',
+    gap: spacing.xs,
   },
   impactTitle: { fontSize: fontSize.sm, color: colors.accent, fontWeight: '600' },
-  impactAmount: { fontSize: fontSize.hero, fontWeight: '800', color: colors.accent, marginTop: spacing.xs },
-  impactSubtext: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  impactAmount: { fontSize: fontSize.hero, fontWeight: '800', color: colors.accent },
+  impactSubtext: { fontSize: fontSize.sm, color: colors.textSecondary },
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: '700',
@@ -118,7 +128,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     alignItems: 'center',
   },
-  charityEmoji: { fontSize: 36 },
   charityInfo: { flex: 1 },
   charityName: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
   charityCategory: { fontSize: fontSize.xs, color: colors.primaryLight, marginTop: 2 },

@@ -8,25 +8,29 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
+import { Icon } from '../components/Icon';
 
 const { width } = Dimensions.get('window');
 
 const SLIDES = [
   {
     id: '1',
-    emoji: '⏰',
+    iconName: 'alarm-outline',
+    iconColor: '#6C3CE1',
     title: 'Set Your Alarms',
     description: 'Create alarms with real money on the line. Choose how much each snooze costs you.',
   },
   {
     id: '2',
-    emoji: '💸',
+    iconName: 'wallet-outline',
+    iconColor: '#FF6B6B',
     title: 'Pay to Snooze',
     description: 'Every snooze deducts from your wallet. 75% goes to your savings, charity, or a friend. 25% platform fee.',
   },
   {
     id: '3',
-    emoji: '🔥',
+    iconName: 'flame',
+    iconColor: '#FF6B35',
     title: 'Build Streaks & Compete',
     description: 'Track your no-snooze streak, challenge friends to battles, and share your progress!',
   },
@@ -60,7 +64,9 @@ export function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
         }}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            <Text style={styles.emoji}>{item.emoji}</Text>
+            <View style={[styles.iconCircle, { backgroundColor: item.iconColor + '20' }]}>
+              <Icon name={item.iconName} size={64} color={item.iconColor} />
+            </View>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.description}>{item.description}</Text>
           </View>
@@ -81,6 +87,11 @@ export function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
         <Text style={styles.buttonText}>
           {currentIndex < SLIDES.length - 1 ? 'Next' : 'Get Started'}
         </Text>
+        <Icon
+          name={currentIndex < SLIDES.length - 1 ? 'arrow-forward' : 'checkmark'}
+          size={20}
+          color={colors.text}
+        />
       </TouchableOpacity>
 
       {currentIndex < SLIDES.length - 1 && (
@@ -104,7 +115,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  emoji: { fontSize: 80, marginBottom: spacing.xl },
+  iconCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
   title: {
     fontSize: fontSize.xxl,
     fontWeight: '800',
@@ -141,6 +159,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginHorizontal: spacing.xl,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   buttonText: {
     color: colors.text,

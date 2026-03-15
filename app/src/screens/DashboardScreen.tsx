@@ -9,6 +9,7 @@ import {
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { statsApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { Icon } from '../components/Icon';
 
 export function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -34,6 +35,8 @@ export function DashboardScreen() {
     setRefreshing(false);
   };
 
+  const hasStreak = (user?.currentStreak || 0) > 0;
+
   return (
     <ScrollView
       style={styles.container}
@@ -43,8 +46,14 @@ export function DashboardScreen() {
       }
     >
       {/* Streak */}
-      <View style={styles.streakCard}>
-        <Text style={styles.streakEmoji}>{(user?.currentStreak || 0) > 0 ? '🔥' : '💤'}</Text>
+      <View style={[styles.streakCard, hasStreak && styles.streakCardActive]}>
+        <View style={styles.streakIconWrap}>
+          <Icon
+            name={hasStreak ? 'flame' : 'moon-outline'}
+            size={48}
+            color={hasStreak ? '#FF6B35' : colors.textMuted}
+          />
+        </View>
         <Text style={styles.streakCount}>{user?.currentStreak || 0}</Text>
         <Text style={styles.streakLabel}>Day Streak</Text>
         <Text style={styles.longestStreak}>
@@ -56,16 +65,19 @@ export function DashboardScreen() {
       <Text style={styles.sectionTitle}>Today</Text>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
+          <Icon name="notifications-outline" size={20} color={colors.textSecondary} />
           <Text style={styles.statValue}>{stats?.today?.snoozeCount || 0}</Text>
           <Text style={styles.statLabel}>Snoozes</Text>
         </View>
         <View style={styles.statCard}>
+          <Icon name="trending-down-outline" size={20} color={colors.danger} />
           <Text style={[styles.statValue, { color: colors.danger }]}>
             ${(stats?.today?.totalPenalty || 0).toFixed(2)}
           </Text>
           <Text style={styles.statLabel}>Spent</Text>
         </View>
         <View style={styles.statCard}>
+          <Icon name="trending-up-outline" size={20} color={colors.accent} />
           <Text style={[styles.statValue, { color: colors.accent }]}>
             ${(stats?.today?.moneySaved || 0).toFixed(2)}
           </Text>
@@ -77,19 +89,30 @@ export function DashboardScreen() {
       <Text style={styles.sectionTitle}>Wallet</Text>
       <View style={styles.walletCard}>
         <View style={styles.walletRow}>
-          <Text style={styles.walletLabel}>Balance</Text>
+          <View style={styles.walletRowLeft}>
+            <Icon name="wallet-outline" size={18} color={colors.textSecondary} />
+            <Text style={styles.walletLabel}>Balance</Text>
+          </View>
           <Text style={styles.walletValue}>
             ${Number(user?.walletBalance || 0).toFixed(2)}
           </Text>
         </View>
+        <View style={styles.divider} />
         <View style={styles.walletRow}>
-          <Text style={styles.walletLabel}>Total Snoozed</Text>
+          <View style={styles.walletRowLeft}>
+            <Icon name="arrow-down-circle-outline" size={18} color={colors.danger} />
+            <Text style={styles.walletLabel}>Total Snoozed</Text>
+          </View>
           <Text style={[styles.walletValue, { color: colors.danger }]}>
             ${Number(user?.totalSnoozed || 0).toFixed(2)}
           </Text>
         </View>
+        <View style={styles.divider} />
         <View style={styles.walletRow}>
-          <Text style={styles.walletLabel}>Total Saved</Text>
+          <View style={styles.walletRowLeft}>
+            <Icon name="arrow-up-circle-outline" size={18} color={colors.accent} />
+            <Text style={styles.walletLabel}>Total Saved</Text>
+          </View>
           <Text style={[styles.walletValue, { color: colors.accent }]}>
             ${Number(user?.totalSaved || 0).toFixed(2)}
           </Text>
@@ -134,7 +157,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  streakEmoji: { fontSize: 48 },
+  streakCardActive: {
+    backgroundColor: '#FF6B3510',
+    borderWidth: 1,
+    borderColor: '#FF6B3530',
+  },
+  streakIconWrap: {
+    marginBottom: spacing.xs,
+  },
   streakCount: {
     fontSize: 64,
     fontWeight: '800',
@@ -168,6 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
+    gap: 6,
   },
   statValue: {
     fontSize: fontSize.xl,
@@ -177,17 +208,26 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: fontSize.xs,
     color: colors.textSecondary,
-    marginTop: 4,
   },
   walletCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   walletRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  walletRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
   },
   walletLabel: {
     fontSize: fontSize.md,

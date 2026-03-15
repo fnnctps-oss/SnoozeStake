@@ -2,9 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
+import { Icon } from '../components/Icon';
 
 // Screens
 import { AlarmListScreen } from '../screens/AlarmListScreen';
@@ -105,14 +105,6 @@ function ProfileStack() {
   );
 }
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return (
-    <Text style={{ color: focused ? colors.primary : colors.textMuted, fontSize: 20 }}>
-      {label}
-    </Text>
-  );
-}
-
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -121,10 +113,17 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          paddingTop: 8,
+          borderTopWidth: 0.5,
+          paddingTop: 6,
+          height: 88,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: 2,
+        },
       }}
     >
       <Tab.Screen
@@ -132,7 +131,9 @@ function MainTabs() {
         component={AlarmStack}
         options={{
           title: 'Alarms',
-          tabBarIcon: ({ focused }) => <TabIcon label="⏰" focused={focused} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="alarm-outline" size={24} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -140,7 +141,9 @@ function MainTabs() {
         component={StatsStack}
         options={{
           title: 'Stats',
-          tabBarIcon: ({ focused }) => <TabIcon label="📊" focused={focused} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="stats-chart-outline" size={24} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -148,7 +151,9 @@ function MainTabs() {
         component={SocialStack}
         options={{
           title: 'Social',
-          tabBarIcon: ({ focused }) => <TabIcon label="👥" focused={focused} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="people-outline" size={24} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -156,7 +161,9 @@ function MainTabs() {
         component={ProfileStack}
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon label="👤" focused={focused} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name="person-outline" size={24} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -165,7 +172,7 @@ function MainTabs() {
 
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [hasOnboarded, setHasOnboarded] = React.useState(false);
+  const [hasOnboarded, setHasOnboarded] = React.useState(true); // TODO: set back to false for production
 
   if (isAuthenticated && !hasOnboarded) {
     return (

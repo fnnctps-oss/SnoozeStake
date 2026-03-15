@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { groupApi } from '../services/api';
+import { Icon } from '../components/Icon';
 
 export function GroupListScreen({ navigation }: any) {
   const [groups, setGroups] = useState<any[]>([]);
@@ -64,9 +65,11 @@ export function GroupListScreen({ navigation }: any) {
       {/* Actions */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.actionButton} onPress={() => setShowCreate(!showCreate)}>
+          <Icon name="add-circle-outline" size={18} color={colors.text} />
           <Text style={styles.actionText}>Create Group</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButtonAlt} onPress={() => setShowJoin(!showJoin)}>
+          <Icon name="enter-outline" size={18} color={colors.primaryLight} />
           <Text style={styles.actionTextAlt}>Join Group</Text>
         </TouchableOpacity>
       </View>
@@ -129,14 +132,15 @@ export function GroupListScreen({ navigation }: any) {
                 </View>
               ))}
             </View>
-            <Text style={styles.inviteCodeText}>
-              Code: {item.inviteCode}
-            </Text>
+            <View style={styles.codeRow}>
+              <Icon name="key-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.inviteCodeText}>{item.inviteCode}</Text>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🤝</Text>
+            <Icon name="people-circle-outline" size={64} color={colors.textMuted} />
             <Text style={styles.emptyText}>No groups yet</Text>
             <Text style={styles.emptySubtext}>
               Create or join an accountability group!
@@ -157,6 +161,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.xs,
   },
   actionText: { color: colors.text, fontWeight: '700' },
   actionButtonAlt: {
@@ -166,6 +173,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.xs,
   },
   actionTextAlt: { color: colors.primaryLight, fontWeight: '700' },
   formRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
@@ -202,9 +212,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   memberAvatarText: { color: colors.text, fontWeight: '600', fontSize: fontSize.xs },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   inviteCodeText: { fontSize: fontSize.xs, color: colors.textMuted },
-  empty: { alignItems: 'center', paddingTop: 80 },
-  emptyIcon: { fontSize: 64 },
-  emptyText: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text, marginTop: spacing.md },
-  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  empty: { alignItems: 'center', paddingTop: 80, gap: spacing.sm },
+  emptyText: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
+  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary },
 });

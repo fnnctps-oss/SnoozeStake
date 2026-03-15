@@ -11,6 +11,7 @@ import {
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { battleApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { Icon } from '../components/Icon';
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: colors.warning,
@@ -128,7 +129,7 @@ export function BattleListScreen({ navigation }: any) {
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>⚔️</Text>
+            <Icon name="flash-outline" size={64} color={colors.textMuted} />
             <Text style={styles.emptyText}>No battles yet</Text>
             <Text style={styles.emptySubtext}>Challenge a friend to a Snooze Battle!</Text>
           </View>
@@ -139,7 +140,7 @@ export function BattleListScreen({ navigation }: any) {
         style={styles.fab}
         onPress={() => navigation.navigate('CreateBattle')}
       >
-        <Text style={styles.fabText}>⚔️</Text>
+        <Icon name="flash" size={28} color={colors.text} />
       </TouchableOpacity>
     </View>
   );
@@ -173,10 +174,9 @@ const styles = StyleSheet.create({
   declineBtn: { flex: 1, borderWidth: 1, borderColor: colors.danger, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center' },
   declineBtnText: { color: colors.danger, fontWeight: '600' },
   dateRange: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: spacing.sm },
-  empty: { alignItems: 'center', paddingTop: 100 },
-  emptyIcon: { fontSize: 64 },
-  emptyText: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text, marginTop: spacing.md },
-  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  empty: { alignItems: 'center', paddingTop: 100, gap: spacing.sm },
+  emptyText: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
+  emptySubtext: { fontSize: fontSize.sm, color: colors.textSecondary },
   fab: {
     position: 'absolute',
     bottom: 24,
@@ -193,5 +193,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
   },
-  fabText: { fontSize: 28 },
 });
