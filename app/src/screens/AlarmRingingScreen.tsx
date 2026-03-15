@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,23 @@ import {
   Alert,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { snoozeApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { Icon } from '../components/Icon';
+
+// Map tone IDs to bundled assets
+const TONE_FILES: Record<string, any> = {
+  classic: require('../../assets/tones/classic.wav'),
+  gentle: require('../../assets/tones/gentle.wav'),
+  rooster: require('../../assets/tones/rooster.wav'),
+  digital: require('../../assets/tones/digital.wav'),
+  birds: require('../../assets/tones/birds.wav'),
+  ocean: require('../../assets/tones/ocean.wav'),
+  chime: require('../../assets/tones/chime.wav'),
+  buzzer: require('../../assets/tones/buzzer.wav'),
+};
 
 export function AlarmRingingScreen({ navigation, route }: any) {
   const alarm = route.params?.alarm;
@@ -19,6 +33,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
   const [totalPenalty, setTotalPenalty] = useState(0);
   const [loading, setLoading] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   // Calculate next snooze cost
   const basePenalty = Number(alarm?.snoozeBasePenalty || 1);
@@ -26,14 +41,63 @@ export function AlarmRingingScreen({ navigation, route }: any) {
     ? basePenalty * Math.pow(2, snoozeCount)
     : basePenalty;
 
+  // Play alarm tone and vibrate
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     Vibration.vibrate([500, 500], true);
+
+    // Start alarm sound
+    const startSound = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+        });
+
+        const toneId = alarm?.soundUrl || 'classic';
+        let source;
+
+        if (TONE_FILES[toneId]) {
+          source = TONE_FILES[toneId];
+        } else if (toneId.startsWith('file://') || toneId.startsWith('content://')) {
+          // Custom sound from device
+          source = { uri: toneId };
+        } else {
+          source = TONE_FILES.classic; // fallback
+        }
+
+        const { sound } = await Audio.Sound.createAsync(source, {
+          isLooping: true,
+          volume: 1.0,
+        });
+        soundRef.current = sound;
+        await sound.playAsync();
+      } catch (err) {
+        console.warn('Error playing alarm sound:', err);
+      }
+    };
+
+    startSound();
+
     return () => {
       clearInterval(timer);
       Vibration.cancel();
+      if (soundRef.current) {
+        soundRef.current.stopAsync().then(() => soundRef.current?.unloadAsync());
+      }
     };
   }, []);
+
+  const stopSound = async () => {
+    Vibration.cancel();
+    if (soundRef.current) {
+      try {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+      } catch {}
+      soundRef.current = null;
+    }
+  };
 
   const handleSnooze = async () => {
     if (!alarm) return;
@@ -50,7 +114,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
       setTotalPenalty((p) => p + Number(result.snoozeEvent.penaltyAmount));
       updateUser({ walletBalance: Number(result.walletBalance) });
 
-      // "Snooze" — go back, alarm will ring again after duration
+      await stopSound();
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Cannot Snooze', err.message);
@@ -60,7 +124,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
   };
 
   const handleDismiss = async () => {
-    Vibration.cancel();
+    await stopSound();
 
     if (alarm?.wakeUpTaskType && alarm.wakeUpTaskType !== 'NONE') {
       navigation.replace('WakeUpTask', {
@@ -69,7 +133,6 @@ export function AlarmRingingScreen({ navigation, route }: any) {
         totalPenalty,
       });
     } else {
-      // No task, just wake up
       try {
         await snoozeApi.wake({
           alarmId: alarm.id,
@@ -95,6 +158,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
   return (
     <View style={styles.container}>
       <View style={styles.topSection}>
+        <Icon name="alarm" size={48} color={colors.primary} />
         <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
         <Text style={styles.alarmLabel}>{alarm?.label || 'Alarm'}</Text>
         {snoozeCount > 0 && (
@@ -130,9 +194,12 @@ export function AlarmRingingScreen({ navigation, route }: any) {
       </View>
 
       {alarm?.noEscapeMode && (
-        <Text style={styles.noEscapeWarning}>
-          No-Escape Mode: closing the app will auto-charge ${nextCost.toFixed(2)}
-        </Text>
+        <View style={styles.noEscapeRow}>
+          <Icon name="warning-outline" size={16} color={colors.danger} />
+          <Text style={styles.noEscapeWarning}>
+            No-Escape Mode: closing the app will auto-charge ${nextCost.toFixed(2)}
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -149,6 +216,7 @@ const styles = StyleSheet.create({
   },
   topSection: {
     alignItems: 'center',
+    gap: spacing.sm,
   },
   currentTime: {
     fontSize: 72,
@@ -159,12 +227,11 @@ const styles = StyleSheet.create({
   alarmLabel: {
     fontSize: fontSize.xl,
     color: colors.textSecondary,
-    marginTop: spacing.sm,
   },
   snoozeInfo: {
     fontSize: fontSize.md,
     color: colors.danger,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     fontWeight: '600',
   },
   buttonSection: {
@@ -223,10 +290,15 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.6)',
     marginTop: spacing.xs,
   },
+  noEscapeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
   noEscapeWarning: {
     fontSize: fontSize.xs,
     color: colors.danger,
-    textAlign: 'center',
     fontWeight: '600',
   },
 });
