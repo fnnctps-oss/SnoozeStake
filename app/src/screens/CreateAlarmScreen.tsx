@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,10 @@ import {
   StyleSheet,
   Alert,
   Switch,
-  FlatList,
   Dimensions,
-  ViewToken,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import * as DocumentPicker from 'expo-document-picker';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAlarmStore } from '../store/alarmStore';
@@ -60,7 +59,7 @@ const BUILTIN_TONES = [
   { id: 'buzzer', name: 'Buzzer', icon: 'volume-high-outline', file: require('../../assets/tones/buzzer.wav') },
 ];
 
-// ─── Scroll Picker Component ──────────────────────────────────
+// ─── Scroll Picker Component (uses ScrollView to avoid VirtualizedList nesting warning) ───
 function ScrollPicker({
   data,
   selectedValue,
@@ -74,60 +73,52 @@ function ScrollPicker({
   formatLabel?: (val: number) => string;
   width?: number;
 }) {
-  const flatListRef = useRef<FlatList>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
-
-  const paddedData = [null, ...data, null] as (number | null)[];
-
+  const scrollRef = useRef<ScrollView>(null);
   const initialIndex = data.indexOf(selectedValue);
 
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      const centerItem = viewableItems.find(
-        (item) => item.index !== null && item.index > 0 && item.index <= data.length
-      );
-      if (centerItem && centerItem.item !== null && centerItem.item !== selectedValue) {
-        onValueChange(centerItem.item);
-      }
-    },
-    [data.length, onValueChange, selectedValue]
-  );
+  useEffect(() => {
+    // Scroll to initial position
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: initialIndex * ITEM_HEIGHT, animated: false });
+    }, 50);
+  }, []);
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 60,
-    minimumViewTime: 50,
-  }).current;
+  const handleScrollEnd = (e: any) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const index = Math.round(y / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
+    if (data[clampedIndex] !== selectedValue) {
+      onValueChange(data[clampedIndex]);
+    }
+    // Snap to nearest item
+    scrollRef.current?.scrollTo({ y: clampedIndex * ITEM_HEIGHT, animated: true });
+  };
 
   return (
     <View style={[pickerStyles.container, { width: pickerWidth, height: PICKER_HEIGHT }]}>
-      {/* Selection highlight */}
       <View style={pickerStyles.highlight} pointerEvents="none" />
-
-      <FlatList
-        ref={flatListRef}
-        data={paddedData}
-        keyExtractor={(item, index) => `${item}-${index}`}
+      <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
         bounces={false}
-        initialScrollIndex={initialIndex}
-        getItemLayout={(_, index) => ({
-          length: ITEM_HEIGHT,
-          offset: ITEM_HEIGHT * index,
-          index,
-        })}
-        onScrollBeginDrag={() => setIsScrolling(true)}
-        onMomentumScrollEnd={() => setIsScrolling(false)}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        renderItem={({ item, index }) => {
-          if (item === null) {
-            return <View style={{ height: ITEM_HEIGHT }} />;
-          }
+        onMomentumScrollEnd={handleScrollEnd}
+        contentContainerStyle={{ paddingVertical: ITEM_HEIGHT }}
+        nestedScrollEnabled
+      >
+        {data.map((item, index) => {
           const isSelected = item === selectedValue;
           return (
-            <View style={[pickerStyles.item, { height: ITEM_HEIGHT }]}>
+            <TouchableOpacity
+              key={`${item}-${index}`}
+              style={[pickerStyles.item, { height: ITEM_HEIGHT }]}
+              onPress={() => {
+                onValueChange(item);
+                scrollRef.current?.scrollTo({ y: index * ITEM_HEIGHT, animated: true });
+              }}
+              activeOpacity={0.7}
+            >
               <Text
                 style={[
                   pickerStyles.itemText,
@@ -136,10 +127,10 @@ function ScrollPicker({
               >
                 {formatLabel ? formatLabel(item) : String(item)}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
-        }}
-      />
+        })}
+      </ScrollView>
     </View>
   );
 }
@@ -159,6 +150,7 @@ const pickerStyles = StyleSheet.create({
     backgroundColor: colors.primary + '25',
     borderRadius: borderRadius.md,
     zIndex: 1,
+    pointerEvents: 'none',
   },
   item: {
     alignItems: 'center',
@@ -218,13 +210,14 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const [customToneUri, setCustomToneUri] = useState<string | null>(null);
   const [customToneName, setCustomToneName] = useState<string | null>(null);
   const [playingTone, setPlayingTone] = useState<string | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
 
-  // Cleanup sound on unmount
+  // Cleanup player on unmount
   useEffect(() => {
     return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
+      if (playerRef.current) {
+        playerRef.current.release();
+        playerRef.current = null;
       }
     };
   }, []);
@@ -246,10 +239,9 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const playTone = async (toneId: string) => {
     try {
       // Stop any currently playing
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
+      if (playerRef.current) {
+        playerRef.current.release();
+        playerRef.current = null;
       }
 
       if (playingTone === toneId) {
@@ -257,9 +249,9 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         return;
       }
 
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      await setAudioModeAsync({ playsInSilentMode: true });
 
-      let source;
+      let source: any;
       if (toneId === 'custom' && customToneUri) {
         source = { uri: customToneUri };
       } else {
@@ -268,17 +260,28 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         source = tone.file;
       }
 
-      const { sound } = await Audio.Sound.createAsync(source);
-      soundRef.current = sound;
+      const player = createAudioPlayer(source);
+      playerRef.current = player;
       setPlayingTone(toneId);
 
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+      player.play();
+
+      // Listen for playback completion
+      const checkInterval = setInterval(() => {
+        if (!player.playing) {
+          setPlayingTone(null);
+          clearInterval(checkInterval);
+        }
+      }, 500);
+
+      // Auto-clear after 5s max
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (playerRef.current === player) {
+          player.pause();
           setPlayingTone(null);
         }
-      });
-
-      await sound.playAsync();
+      }, 5000);
     } catch (err) {
       console.warn('Error playing tone:', err);
       setPlayingTone(null);
@@ -314,10 +317,9 @@ export function CreateAlarmScreen({ navigation, route }: any) {
     }
 
     // Stop any preview playing
-    if (soundRef.current) {
-      await soundRef.current.stopAsync();
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
+    if (playerRef.current) {
+      playerRef.current.release();
+      playerRef.current = null;
       setPlayingTone(null);
     }
 

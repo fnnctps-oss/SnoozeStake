@@ -8,7 +8,8 @@ import {
   Alert,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { snoozeApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -33,7 +34,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
   const [totalPenalty, setTotalPenalty] = useState(0);
   const [loading, setLoading] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
 
   // Calculate next snooze cost
   const basePenalty = Number(alarm?.snoozeBasePenalty || 1);
@@ -49,29 +50,27 @@ export function AlarmRingingScreen({ navigation, route }: any) {
     // Start alarm sound
     const startSound = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
         });
 
         const toneId = alarm?.soundUrl || 'classic';
-        let source;
+        let source: any;
 
         if (TONE_FILES[toneId]) {
           source = TONE_FILES[toneId];
-        } else if (toneId.startsWith('file://') || toneId.startsWith('content://')) {
-          // Custom sound from device
+        } else if (toneId?.startsWith('file://') || toneId?.startsWith('content://')) {
           source = { uri: toneId };
         } else {
-          source = TONE_FILES.classic; // fallback
+          source = TONE_FILES.classic;
         }
 
-        const { sound } = await Audio.Sound.createAsync(source, {
-          isLooping: true,
-          volume: 1.0,
-        });
-        soundRef.current = sound;
-        await sound.playAsync();
+        const player = createAudioPlayer(source);
+        player.loop = true;
+        player.volume = 1.0;
+        playerRef.current = player;
+        player.play();
       } catch (err) {
         console.warn('Error playing alarm sound:', err);
       }
@@ -82,20 +81,20 @@ export function AlarmRingingScreen({ navigation, route }: any) {
     return () => {
       clearInterval(timer);
       Vibration.cancel();
-      if (soundRef.current) {
-        soundRef.current.stopAsync().then(() => soundRef.current?.unloadAsync());
+      if (playerRef.current) {
+        playerRef.current.release();
+        playerRef.current = null;
       }
     };
   }, []);
 
-  const stopSound = async () => {
+  const stopSound = () => {
     Vibration.cancel();
-    if (soundRef.current) {
+    if (playerRef.current) {
       try {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
+        playerRef.current.release();
       } catch {}
-      soundRef.current = null;
+      playerRef.current = null;
     }
   };
 
@@ -114,7 +113,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
       setTotalPenalty((p) => p + Number(result.snoozeEvent.penaltyAmount));
       updateUser({ walletBalance: Number(result.walletBalance) });
 
-      await stopSound();
+      stopSound();
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Cannot Snooze', err.message);
@@ -124,7 +123,7 @@ export function AlarmRingingScreen({ navigation, route }: any) {
   };
 
   const handleDismiss = async () => {
-    await stopSound();
+    stopSound();
 
     if (alarm?.wakeUpTaskType && alarm.wakeUpTaskType !== 'NONE') {
       navigation.replace('WakeUpTask', {
