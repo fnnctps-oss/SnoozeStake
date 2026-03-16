@@ -25,6 +25,9 @@ const MOCK_USER: User = {
   createdAt: new Date().toISOString(),
 };
 
+// Set the mock token on the API client at startup
+setAuthToken('mock-token');
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: MOCK_USER,
   token: 'mock-token',
