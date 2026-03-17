@@ -2,8 +2,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
@@ -92,74 +90,25 @@ function ProfileStack() {
   );
 }
 
-function GlassTabIcon({ name, color, focused }: { name: string; color: string; focused: boolean }) {
-  return (
-    <View style={[
-      tabStyles.iconWrap,
-      focused && tabStyles.iconWrapActive,
-    ]}>
-      {focused && (
-        <>
-          <LinearGradient
-            colors={['rgba(108, 60, 225, 0.30)', 'rgba(139, 92, 246, 0.12)', 'rgba(108, 60, 225, 0.22)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={tabStyles.glassHighlight} />
-        </>
-      )}
-      <Icon name={focused ? name.replace('-outline', '') : name} size={20} color={color} />
-    </View>
-  );
-}
-
-const tabStyles = StyleSheet.create({
-  iconWrap: {
-    width: 52,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
-  },
-  iconWrapActive: {
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.35)',
-    shadowColor: '#6C3CE1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-  },
-  glassHighlight: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-});
-
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(10, 5, 21, 0.92)',
-          borderTopColor: 'rgba(139, 92, 246, 0.15)',
-          borderTopWidth: 0.5,
-          paddingTop: 4,
-          height: 90,
+          backgroundColor: 'rgba(12, 6, 24, 0.95)',
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(139, 92, 246, 0.12)',
+          height: 85,
+          paddingTop: 8,
+          paddingBottom: 28,
         },
         tabBarActiveTintColor: colors.primaryLight,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarInactiveTintColor: 'rgba(160, 160, 190, 0.5)',
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
-          marginTop: 2,
+          fontWeight: '500',
+          letterSpacing: 0.2,
         },
       }}
     >
@@ -169,7 +118,7 @@ function MainTabs() {
         options={{
           title: 'Alarms',
           tabBarIcon: ({ color, focused }) => (
-            <GlassTabIcon name="alarm-outline" color={color} focused={focused} />
+            <Icon name={focused ? 'alarm' : 'alarm-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -179,7 +128,7 @@ function MainTabs() {
         options={{
           title: 'Stats',
           tabBarIcon: ({ color, focused }) => (
-            <GlassTabIcon name="stats-chart-outline" color={color} focused={focused} />
+            <Icon name={focused ? 'stats-chart' : 'stats-chart-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -189,7 +138,7 @@ function MainTabs() {
         options={{
           title: 'Social',
           tabBarIcon: ({ color, focused }) => (
-            <GlassTabIcon name="people-outline" color={color} focused={focused} />
+            <Icon name={focused ? 'people' : 'people-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -199,7 +148,7 @@ function MainTabs() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <GlassTabIcon name="person-outline" color={color} focused={focused} />
+            <Icon name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
         }}
       />
