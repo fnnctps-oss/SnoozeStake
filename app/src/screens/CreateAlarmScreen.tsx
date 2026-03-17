@@ -47,14 +47,18 @@ const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 // ─── Alarm Tones ──────────────────────────────────────────────
 const BUILTIN_TONES = [
-  { id: 'classic', name: 'Classic Alarm', icon: 'alarm-outline', file: require('../../assets/tones/classic.wav') },
-  { id: 'gentle', name: 'Gentle Wake', icon: 'water-outline', file: require('../../assets/tones/gentle.wav') },
-  { id: 'rooster', name: 'Rooster', icon: 'sunny-outline', file: require('../../assets/tones/rooster.wav') },
-  { id: 'digital', name: 'Digital Beep', icon: 'hardware-chip-outline', file: require('../../assets/tones/digital.wav') },
-  { id: 'birds', name: 'Morning Birds', icon: 'leaf-outline', file: require('../../assets/tones/birds.wav') },
-  { id: 'ocean', name: 'Ocean Waves', icon: 'earth-outline', file: require('../../assets/tones/ocean.wav') },
-  { id: 'chime', name: 'Soft Chime', icon: 'notifications-outline', file: require('../../assets/tones/chime.wav') },
-  { id: 'buzzer', name: 'Buzzer', icon: 'volume-high-outline', file: require('../../assets/tones/buzzer.wav') },
+  { id: 'radar', name: 'Radar', icon: 'radio-outline', file: require('../../assets/tones/radar.wav') },
+  { id: 'apex', name: 'Apex', icon: 'trending-up-outline', file: require('../../assets/tones/apex.wav') },
+  { id: 'beacon', name: 'Beacon', icon: 'flashlight-outline', file: require('../../assets/tones/beacon.wav') },
+  { id: 'constellation', name: 'Constellation', icon: 'star-outline', file: require('../../assets/tones/constellation.wav') },
+  { id: 'cosmic', name: 'Cosmic', icon: 'planet-outline', file: require('../../assets/tones/cosmic.wav') },
+  { id: 'illuminate', name: 'Illuminate', icon: 'sunny-outline', file: require('../../assets/tones/illuminate.wav') },
+  { id: 'nightowl', name: 'Night Owl', icon: 'moon-outline', file: require('../../assets/tones/nightowl.wav') },
+  { id: 'presto', name: 'Presto', icon: 'musical-notes-outline', file: require('../../assets/tones/presto.wav') },
+  { id: 'ripples', name: 'Ripples', icon: 'water-outline', file: require('../../assets/tones/ripples.wav') },
+  { id: 'sencha', name: 'Sencha', icon: 'leaf-outline', file: require('../../assets/tones/sencha.wav') },
+  { id: 'silk', name: 'Silk', icon: 'ribbon-outline', file: require('../../assets/tones/silk.wav') },
+  { id: 'summit', name: 'Summit', icon: 'triangle-outline', file: require('../../assets/tones/summit.wav') },
 ];
 
 // ─── Scroll Picker Component (uses ScrollView to avoid VirtualizedList nesting warning) ───
@@ -206,7 +210,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const [saving, setSaving] = useState(false);
 
   // Tone state
-  const [selectedTone, setSelectedTone] = useState(existingAlarm?.soundUrl || 'classic');
+  const [selectedTone, setSelectedTone] = useState(existingAlarm?.soundUrl || 'radar');
   const [customToneUri, setCustomToneUri] = useState<string | null>(null);
   const [customToneName, setCustomToneName] = useState<string | null>(null);
   const [playingTone, setPlayingTone] = useState<string | null>(null);
