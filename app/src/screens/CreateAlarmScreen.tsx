@@ -212,16 +212,6 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const [playingTone, setPlayingTone] = useState<string | null>(null);
   const playerRef = useRef<AudioPlayer | null>(null);
 
-  // Cleanup player on unmount
-  useEffect(() => {
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.release();
-        playerRef.current = null;
-      }
-    };
-  }, []);
-
   const to24h = () => {
     let h = hour;
     if (period === 'AM' && h === 12) h = 0;
@@ -236,19 +226,33 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   };
 
   // ─── Tone Playback ──────────────────────────
-  const playTone = async (toneId: string) => {
+  const stopCurrentPlayer = () => {
     try {
-      // Stop any currently playing
       if (playerRef.current) {
+        playerRef.current.pause();
         playerRef.current.release();
-        playerRef.current = null;
       }
+    } catch {
+      // Player may already be released
+    }
+    playerRef.current = null;
+  };
 
-      if (playingTone === toneId) {
-        setPlayingTone(null);
-        return;
-      }
+  // Cleanup player on unmount
+  useEffect(() => {
+    return () => stopCurrentPlayer();
+  }, []);
 
+  const playTone = async (toneId: string) => {
+    // Stop any currently playing
+    stopCurrentPlayer();
+
+    if (playingTone === toneId) {
+      setPlayingTone(null);
+      return;
+    }
+
+    try {
       await setAudioModeAsync({ playsInSilentMode: true });
 
       let source: any;
@@ -268,9 +272,14 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 
       // Listen for playback completion
       const checkInterval = setInterval(() => {
-        if (!player.playing) {
-          setPlayingTone(null);
+        try {
+          if (!player.playing) {
+            setPlayingTone(null);
+            clearInterval(checkInterval);
+          }
+        } catch {
           clearInterval(checkInterval);
+          setPlayingTone(null);
         }
       }, 500);
 
@@ -278,7 +287,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       setTimeout(() => {
         clearInterval(checkInterval);
         if (playerRef.current === player) {
-          player.pause();
+          try { player.pause(); } catch {}
           setPlayingTone(null);
         }
       }, 5000);
