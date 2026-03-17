@@ -627,7 +627,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 // ─── Styles ──────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: spacing.lg, paddingBottom: 100, paddingTop: 100 },
+  content: { padding: spacing.lg, paddingBottom: 100, paddingTop: spacing.lg },
 
   // Time picker
   timeSection: {

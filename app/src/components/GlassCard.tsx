@@ -11,14 +11,14 @@ interface GlassCardProps {
 export function GlassCard({ children, style, variant = 'default' }: GlassCardProps) {
   const bgColor =
     variant === 'purple'
-      ? 'rgba(108, 60, 225, 0.12)'
+      ? 'rgba(108, 60, 225, 0.18)'
       : variant === 'accent'
         ? 'rgba(0, 230, 118, 0.08)'
         : colors.surface;
 
   const borderColor =
     variant === 'purple'
-      ? colors.glassBorder
+      ? 'rgba(139, 92, 246, 0.35)'
       : variant === 'accent'
         ? 'rgba(0, 230, 118, 0.15)'
         : colors.surfaceBorder;

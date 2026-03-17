@@ -114,7 +114,7 @@ export function ProfileScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: 40, paddingTop: 100 },
+  content: { padding: spacing.lg, paddingBottom: 40, paddingTop: spacing.lg },
   header: {
     alignItems: 'center',
     marginBottom: spacing.xl,

@@ -156,7 +156,7 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing.md, paddingBottom: 40, paddingTop: 100 },
+  content: { padding: spacing.md, paddingBottom: 40, paddingTop: spacing.md },
   streakCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.xl,

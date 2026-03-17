@@ -148,10 +148,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
     paddingBottom: 100,
-    paddingTop: 100,
+    paddingTop: spacing.md,
   },
   alarmCard: {
     padding: spacing.lg,
+    shadowColor: '#6C3CE1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   alarmRow: {
     flexDirection: 'row',

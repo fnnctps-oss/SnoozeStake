@@ -3,7 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
@@ -32,9 +31,10 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const stackScreenOptions = {
-  headerStyle: { backgroundColor: 'transparent' },
-  headerTransparent: true,
-  headerBlurEffect: 'dark' as const,
+  headerStyle: {
+    backgroundColor: 'rgba(10, 5, 21, 0.95)',
+  },
+  headerShadowVisible: false,
   headerTintColor: colors.text,
   contentStyle: { backgroundColor: colors.background },
 };
@@ -91,22 +91,54 @@ function ProfileStack() {
   );
 }
 
+function GlassTabIcon({ name, color, focused }: { name: string; color: string; focused: boolean }) {
+  return (
+    <View style={[
+      tabStyles.iconWrap,
+      focused && tabStyles.iconWrapActive,
+    ]}>
+      <Icon name={name} size={22} color={color} />
+    </View>
+  );
+}
+
+const tabStyles = StyleSheet.create({
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(108, 60, 225, 0.25)',
+    borderColor: 'rgba(139, 92, 246, 0.4)',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+  },
+});
+
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(10, 5, 21, 0.85)',
+          backgroundColor: 'rgba(10, 5, 21, 0.92)',
           borderTopColor: 'rgba(139, 92, 246, 0.15)',
           borderTopWidth: 0.5,
-          paddingTop: 6,
-          height: 88,
+          paddingTop: 4,
+          height: 90,
         },
         tabBarActiveTintColor: colors.primaryLight,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginTop: 2,
         },
@@ -117,8 +149,8 @@ function MainTabs() {
         component={AlarmStack}
         options={{
           title: 'Alarms',
-          tabBarIcon: ({ color }) => (
-            <Icon name="alarm-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GlassTabIcon name="alarm-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -127,8 +159,8 @@ function MainTabs() {
         component={StatsStack}
         options={{
           title: 'Stats',
-          tabBarIcon: ({ color }) => (
-            <Icon name="stats-chart-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GlassTabIcon name="stats-chart-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -137,8 +169,8 @@ function MainTabs() {
         component={SocialStack}
         options={{
           title: 'Social',
-          tabBarIcon: ({ color }) => (
-            <Icon name="people-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GlassTabIcon name="people-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -147,8 +179,8 @@ function MainTabs() {
         component={ProfileStack}
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <Icon name="person-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <GlassTabIcon name="person-outline" color={color} focused={focused} />
           ),
         }}
       />

@@ -118,7 +118,7 @@ export function SocialFeedScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 40, paddingTop: 100 },
+  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 40, paddingTop: spacing.md },
   feedItem: {
     flexDirection: 'row',
     gap: spacing.md,
