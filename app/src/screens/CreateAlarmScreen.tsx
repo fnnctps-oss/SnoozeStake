@@ -18,6 +18,7 @@ import { useAlarmStore } from '../store/alarmStore';
 import { alarmApi } from '../services/api';
 import { WakeUpTaskType, TaskDifficulty, PenaltyDestination } from '../types';
 import { Icon } from '../components/Icon';
+import { GradientBackground } from '../components/GradientBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -136,7 +137,9 @@ const pickerStyles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   highlight: {
     position: 'absolute',
@@ -144,7 +147,7 @@ const pickerStyles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    backgroundColor: colors.primary + '25',
+    backgroundColor: 'rgba(108, 60, 225, 0.2)',
     borderRadius: borderRadius.md,
     zIndex: 1,
     pointerEvents: 'none',
@@ -371,6 +374,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   };
 
   return (
+    <GradientBackground>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* ─── Time Picker ─── */}
       <View style={styles.timeSection}>
@@ -616,13 +620,14 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         </TouchableOpacity>
       )}
     </ScrollView>
+    </GradientBackground>
   );
 }
 
 // ─── Styles ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: 100 },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  content: { padding: spacing.lg, paddingBottom: 100, paddingTop: 100 },
 
   // Time picker
   timeSection: {
@@ -647,11 +652,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
   },
   ampmActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(108, 60, 225, 0.6)',
+    borderColor: 'rgba(139, 92, 246, 0.4)',
   },
   ampmText: {
     fontSize: fontSize.md,
@@ -664,7 +672,9 @@ const styles = StyleSheet.create({
 
   // Input
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     color: colors.text,
@@ -692,10 +702,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
   },
-  daySelected: { backgroundColor: colors.primary },
+  daySelected: { backgroundColor: 'rgba(108, 60, 225, 0.6)', borderColor: 'rgba(139, 92, 246, 0.4)' },
   dayText: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '600' },
   dayTextSelected: { color: colors.text },
 
@@ -706,15 +718,16 @@ const styles = StyleSheet.create({
   toneItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   toneItemSelected: {
-    backgroundColor: colors.primary + '15',
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
+    backgroundColor: 'rgba(108, 60, 225, 0.15)',
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   toneRadio: {
     width: 20,
@@ -756,7 +769,9 @@ const styles = StyleSheet.create({
   penaltyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dollarSign: { fontSize: fontSize.xl, color: colors.danger, fontWeight: '700' },
   penaltyInput: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     color: colors.danger,
@@ -772,7 +787,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginTop: spacing.md,
@@ -789,7 +806,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -799,18 +818,22 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     flexDirection: 'row',
     gap: 6,
   },
-  optionSelected: { backgroundColor: colors.primary },
+  optionSelected: { backgroundColor: 'rgba(108, 60, 225, 0.6)', borderColor: 'rgba(139, 92, 246, 0.4)' },
   optionText: { fontSize: fontSize.sm, color: colors.textSecondary, fontWeight: '600' },
   optionTextSelected: { color: colors.text },
 
   // Save / Delete
   saveButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: 'rgba(0, 230, 118, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
@@ -818,16 +841,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.sm,
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   saveDisabled: { opacity: 0.6 },
-  saveText: { fontSize: fontSize.lg, fontWeight: '700', color: colors.background },
+  saveText: { fontSize: fontSize.lg, fontWeight: '700', color: '#050510' },
   deleteButton: {
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
     marginTop: spacing.md,
     borderWidth: 1,
-    borderColor: colors.danger,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.sm,

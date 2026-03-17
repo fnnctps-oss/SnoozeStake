@@ -7,10 +7,12 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
+import { colors, spacing, fontSize } from '../utils/theme';
 import { feedApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { Icon, IconBubble } from '../components/Icon';
+import { GradientBackground } from '../components/GradientBackground';
+import { GlassCard } from '../components/GlassCard';
 
 export function SocialFeedScreen({ navigation }: any) {
   const userId = useAuthStore((s) => s.user?.id);
@@ -43,20 +45,26 @@ export function SocialFeedScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
+    <GradientBackground>
       {/* Quick Nav */}
       <View style={styles.navRow}>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Battles')}>
-          <Icon name="flash-outline" size={24} color={colors.danger} />
-          <Text style={styles.navLabel}>Battles</Text>
+        <TouchableOpacity style={styles.navButtonWrapper} onPress={() => navigation.navigate('Battles')}>
+          <GlassCard style={styles.navButton}>
+            <Icon name="flash-outline" size={24} color={colors.danger} />
+            <Text style={styles.navLabel}>Battles</Text>
+          </GlassCard>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Groups')}>
-          <Icon name="people-circle-outline" size={24} color={colors.accent} />
-          <Text style={styles.navLabel}>Groups</Text>
+        <TouchableOpacity style={styles.navButtonWrapper} onPress={() => navigation.navigate('Groups')}>
+          <GlassCard style={styles.navButton}>
+            <Icon name="people-circle-outline" size={24} color={colors.accent} />
+            <Text style={styles.navLabel}>Groups</Text>
+          </GlassCard>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Friends')}>
-          <Icon name="person-add-outline" size={24} color={colors.primaryLight} />
-          <Text style={styles.navLabel}>Friends</Text>
+        <TouchableOpacity style={styles.navButtonWrapper} onPress={() => navigation.navigate('Friends')}>
+          <GlassCard style={styles.navButton}>
+            <Icon name="person-add-outline" size={24} color={colors.primaryLight} />
+            <Text style={styles.navLabel}>Friends</Text>
+          </GlassCard>
         </TouchableOpacity>
       </View>
 
@@ -72,12 +80,12 @@ export function SocialFeedScreen({ navigation }: any) {
           const isSnooze = item.type === 'snooze';
 
           return (
-            <View style={styles.feedItem}>
+            <GlassCard style={styles.feedItem}>
               <IconBubble
                 name={isSnooze ? 'moon-outline' : 'sunny-outline'}
                 size={20}
                 color={isSnooze ? colors.danger : colors.accent}
-                bgColor={isSnooze ? colors.danger + '20' : colors.accent + '20'}
+                bgColor={isSnooze ? 'rgba(255, 69, 58, 0.13)' : 'rgba(0, 230, 118, 0.13)'}
               />
               <View style={styles.feedContent}>
                 <Text style={styles.feedText}>
@@ -92,7 +100,7 @@ export function SocialFeedScreen({ navigation }: any) {
                   {item.alarmLabel} · {timeAgo(item.timestamp)}
                 </Text>
               </View>
-            </View>
+            </GlassCard>
           );
         }}
         ListEmptyComponent={
@@ -105,18 +113,14 @@ export function SocialFeedScreen({ navigation }: any) {
           </View>
         }
       />
-    </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 40 },
+  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 40, paddingTop: 100 },
   feedItem: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
     gap: spacing.md,
     alignItems: 'center',
   },
@@ -130,11 +134,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     paddingBottom: 0,
   },
-  navButton: {
+  navButtonWrapper: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+  },
+  navButton: {
     alignItems: 'center',
     gap: 4,
   },

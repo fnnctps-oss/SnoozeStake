@@ -10,6 +10,8 @@ import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { statsApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
+import { GradientBackground } from '../components/GradientBackground';
+import { GlassCard } from '../components/GlassCard';
 
 export function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -38,128 +40,130 @@ export function DashboardScreen() {
   const hasStreak = (user?.currentStreak || 0) > 0;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-      }
-    >
-      {/* Streak */}
-      <View style={[styles.streakCard, hasStreak && styles.streakCardActive]}>
-        <View style={styles.streakIconWrap}>
-          <Icon
-            name={hasStreak ? 'flame' : 'moon-outline'}
-            size={48}
-            color={hasStreak ? '#FF6B35' : colors.textMuted}
-          />
-        </View>
-        <Text style={styles.streakCount}>{user?.currentStreak || 0}</Text>
-        <Text style={styles.streakLabel}>Day Streak</Text>
-        <Text style={styles.longestStreak}>
-          Best: {user?.longestStreak || 0} days
-        </Text>
-      </View>
-
-      {/* Today Summary */}
-      <Text style={styles.sectionTitle}>Today</Text>
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Icon name="notifications-outline" size={20} color={colors.textSecondary} />
-          <Text style={styles.statValue}>{stats?.today?.snoozeCount || 0}</Text>
-          <Text style={styles.statLabel}>Snoozes</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Icon name="trending-down-outline" size={20} color={colors.danger} />
-          <Text style={[styles.statValue, { color: colors.danger }]}>
-            ${(stats?.today?.totalPenalty || 0).toFixed(2)}
-          </Text>
-          <Text style={styles.statLabel}>Spent</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Icon name="trending-up-outline" size={20} color={colors.accent} />
-          <Text style={[styles.statValue, { color: colors.accent }]}>
-            ${(stats?.today?.moneySaved || 0).toFixed(2)}
-          </Text>
-          <Text style={styles.statLabel}>Saved</Text>
-        </View>
-      </View>
-
-      {/* Wallet Overview */}
-      <Text style={styles.sectionTitle}>Wallet</Text>
-      <View style={styles.walletCard}>
-        <View style={styles.walletRow}>
-          <View style={styles.walletRowLeft}>
-            <Icon name="wallet-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.walletLabel}>Balance</Text>
+    <GradientBackground>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
+        {/* Streak */}
+        <GlassCard
+          variant={hasStreak ? 'purple' : 'default'}
+          style={[styles.streakCard, hasStreak && styles.streakCardActive]}
+        >
+          <View style={styles.streakIconWrap}>
+            <Icon
+              name={hasStreak ? 'flame' : 'moon-outline'}
+              size={48}
+              color={hasStreak ? '#FF6B35' : colors.textMuted}
+            />
           </View>
-          <Text style={styles.walletValue}>
-            ${Number(user?.walletBalance || 0).toFixed(2)}
+          <Text style={styles.streakCount}>{user?.currentStreak || 0}</Text>
+          <Text style={styles.streakLabel}>Day Streak</Text>
+          <Text style={styles.longestStreak}>
+            Best: {user?.longestStreak || 0} days
           </Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.walletRow}>
-          <View style={styles.walletRowLeft}>
-            <Icon name="arrow-down-circle-outline" size={18} color={colors.danger} />
-            <Text style={styles.walletLabel}>Total Snoozed</Text>
-          </View>
-          <Text style={[styles.walletValue, { color: colors.danger }]}>
-            ${Number(user?.totalSnoozed || 0).toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.walletRow}>
-          <View style={styles.walletRowLeft}>
-            <Icon name="arrow-up-circle-outline" size={18} color={colors.accent} />
-            <Text style={styles.walletLabel}>Total Saved</Text>
-          </View>
-          <Text style={[styles.walletValue, { color: colors.accent }]}>
-            ${Number(user?.totalSaved || 0).toFixed(2)}
-          </Text>
-        </View>
-      </View>
+        </GlassCard>
 
-      {/* Weekly Chart (text-based) */}
-      {stats?.weekly && Object.keys(stats.weekly).length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>This Week</Text>
-          <View style={styles.weeklyCard}>
-            {Object.entries(stats.weekly).map(([date, data]: [string, any]) => (
-              <View key={date} style={styles.weeklyRow}>
-                <Text style={styles.weeklyDate}>
-                  {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
-                </Text>
-                <View style={styles.weeklyBar}>
-                  <View
-                    style={[
-                      styles.weeklyBarFill,
-                      { width: `${Math.min(data.snoozeCount * 20, 100)}%` },
-                    ]}
-                  />
+        {/* Today Summary */}
+        <Text style={styles.sectionTitle}>Today</Text>
+        <View style={styles.statsRow}>
+          <GlassCard style={styles.statCard}>
+            <Icon name="notifications-outline" size={20} color={colors.textSecondary} />
+            <Text style={styles.statValue}>{stats?.today?.snoozeCount || 0}</Text>
+            <Text style={styles.statLabel}>Snoozes</Text>
+          </GlassCard>
+          <GlassCard style={styles.statCard}>
+            <Icon name="trending-down-outline" size={20} color={colors.danger} />
+            <Text style={[styles.statValue, { color: colors.danger }]}>
+              ${(stats?.today?.totalPenalty || 0).toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Spent</Text>
+          </GlassCard>
+          <GlassCard style={styles.statCard}>
+            <Icon name="trending-up-outline" size={20} color={colors.accent} />
+            <Text style={[styles.statValue, { color: colors.accent }]}>
+              ${(stats?.today?.moneySaved || 0).toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Saved</Text>
+          </GlassCard>
+        </View>
+
+        {/* Wallet Overview */}
+        <Text style={styles.sectionTitle}>Wallet</Text>
+        <GlassCard style={styles.walletCard}>
+          <View style={styles.walletRow}>
+            <View style={styles.walletRowLeft}>
+              <Icon name="wallet-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.walletLabel}>Balance</Text>
+            </View>
+            <Text style={styles.walletValue}>
+              ${Number(user?.walletBalance || 0).toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.walletRow}>
+            <View style={styles.walletRowLeft}>
+              <Icon name="arrow-down-circle-outline" size={18} color={colors.danger} />
+              <Text style={styles.walletLabel}>Total Snoozed</Text>
+            </View>
+            <Text style={[styles.walletValue, { color: colors.danger }]}>
+              ${Number(user?.totalSnoozed || 0).toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.walletRow}>
+            <View style={styles.walletRowLeft}>
+              <Icon name="arrow-up-circle-outline" size={18} color={colors.accent} />
+              <Text style={styles.walletLabel}>Total Saved</Text>
+            </View>
+            <Text style={[styles.walletValue, { color: colors.accent }]}>
+              ${Number(user?.totalSaved || 0).toFixed(2)}
+            </Text>
+          </View>
+        </GlassCard>
+
+        {/* Weekly Chart (text-based) */}
+        {stats?.weekly && Object.keys(stats.weekly).length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>This Week</Text>
+            <GlassCard style={styles.weeklyCard}>
+              {Object.entries(stats.weekly).map(([date, data]: [string, any]) => (
+                <View key={date} style={styles.weeklyRow}>
+                  <Text style={styles.weeklyDate}>
+                    {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                  </Text>
+                  <View style={styles.weeklyBar}>
+                    <View
+                      style={[
+                        styles.weeklyBarFill,
+                        { width: `${Math.min(data.snoozeCount * 20, 100)}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.weeklyAmount}>${data.penalty.toFixed(2)}</Text>
                 </View>
-                <Text style={styles.weeklyAmount}>${data.penalty.toFixed(2)}</Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-    </ScrollView>
+              ))}
+            </GlassCard>
+          </>
+        )}
+      </ScrollView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: 40 },
+  container: { flex: 1 },
+  content: { padding: spacing.md, paddingBottom: 40, paddingTop: 100 },
   streakCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   streakCardActive: {
-    backgroundColor: '#FF6B3510',
-    borderWidth: 1,
     borderColor: '#FF6B3530',
   },
   streakIconWrap: {
@@ -194,7 +198,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
@@ -210,7 +213,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   walletCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     gap: spacing.sm,
@@ -239,7 +241,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   weeklyCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     gap: spacing.sm,

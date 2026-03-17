@@ -13,6 +13,8 @@ import { useAlarmStore } from '../store/alarmStore';
 import { alarmApi } from '../services/api';
 import { Alarm } from '../types';
 import { Icon } from '../components/Icon';
+import { GradientBackground } from '../components/GradientBackground';
+import { GlassCard } from '../components/GlassCard';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -38,7 +40,7 @@ export function AlarmListScreen({ navigation }: any) {
     try {
       await alarmApi.toggle(alarm.id);
     } catch {
-      toggleAlarm(alarm.id); // Revert on failure
+      toggleAlarm(alarm.id);
     }
   };
 
@@ -57,52 +59,59 @@ export function AlarmListScreen({ navigation }: any) {
 
   const renderAlarm = ({ item }: { item: Alarm }) => (
     <TouchableOpacity
-      style={[styles.alarmCard, !item.isEnabled && styles.alarmDisabled]}
+      activeOpacity={0.7}
       onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
     >
-      <View style={styles.alarmInfo}>
-        <Text style={[styles.alarmTime, !item.isEnabled && styles.textDisabled]}>
-          {formatTime(item.time)}
-        </Text>
-        <Text style={[styles.alarmLabel, !item.isEnabled && styles.textDisabled]}>
-          {item.label}
-        </Text>
-        <View style={styles.daysRow}>
-          {DAYS.map((d, i) => (
-            <Text
-              key={d}
-              style={[
-                styles.dayBadge,
-                item.daysOfWeek.includes(i) && styles.dayActive,
-              ]}
-            >
-              {d}
+      <GlassCard
+        variant="purple"
+        style={[styles.alarmCard, !item.isEnabled && styles.alarmDisabled]}
+      >
+        <View style={styles.alarmRow}>
+          <View style={styles.alarmInfo}>
+            <Text style={[styles.alarmTime, !item.isEnabled && styles.textDisabled]}>
+              {formatTime(item.time)}
             </Text>
-          ))}
+            <Text style={[styles.alarmLabel, !item.isEnabled && styles.textDisabled]}>
+              {item.label}
+            </Text>
+            <View style={styles.daysRow}>
+              {DAYS.map((d, i) => (
+                <Text
+                  key={d}
+                  style={[
+                    styles.dayBadge,
+                    item.daysOfWeek.includes(i) && styles.dayActive,
+                  ]}
+                >
+                  {d}
+                </Text>
+              ))}
+            </View>
+            <View style={styles.penaltyRow}>
+              <Text style={styles.penaltyText}>
+                ${Number(item.snoozeBasePenalty).toFixed(2)} per snooze
+              </Text>
+              {item.useEscalatingPenalty && (
+                <Text style={styles.escalatingBadge}>Escalating</Text>
+              )}
+              {item.noEscapeMode && (
+                <Text style={styles.noEscapeBadge}>No Escape</Text>
+              )}
+            </View>
+          </View>
+          <Switch
+            value={item.isEnabled}
+            onValueChange={() => handleToggle(item)}
+            trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(108,60,225,0.5)' }}
+            thumbColor={item.isEnabled ? colors.primaryLight : colors.textMuted}
+          />
         </View>
-        <View style={styles.penaltyRow}>
-          <Text style={styles.penaltyText}>
-            ${Number(item.snoozeBasePenalty).toFixed(2)} per snooze
-          </Text>
-          {item.useEscalatingPenalty && (
-            <Text style={styles.escalatingBadge}>Escalating</Text>
-          )}
-          {item.noEscapeMode && (
-            <Text style={styles.noEscapeBadge}>No Escape</Text>
-          )}
-        </View>
-      </View>
-      <Switch
-        value={item.isEnabled}
-        onValueChange={() => handleToggle(item)}
-        trackColor={{ false: colors.surfaceLight, true: colors.primaryLight }}
-        thumbColor={item.isEnabled ? colors.primary : colors.textMuted}
-      />
+      </GlassCard>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <GradientBackground>
       <FlatList
         data={alarms}
         keyExtractor={(item) => item.id}
@@ -113,7 +122,9 @@ export function AlarmListScreen({ navigation }: any) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Icon name="alarm-outline" size={64} color={colors.textMuted} />
+            <View style={styles.emptyIconWrap}>
+              <Icon name="alarm-outline" size={64} color={colors.primaryLight} />
+            </View>
             <Text style={styles.emptyText}>No alarms yet</Text>
             <Text style={styles.emptySubtext}>
               Create your first alarm and put real money on the line!
@@ -128,24 +139,21 @@ export function AlarmListScreen({ navigation }: any) {
       >
         <Icon name="add" size={28} color={colors.text} />
       </TouchableOpacity>
-    </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   list: {
     padding: spacing.md,
     gap: spacing.md,
     paddingBottom: 100,
+    paddingTop: 100,
   },
   alarmCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
     padding: spacing.lg,
+  },
+  alarmRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -184,7 +192,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   dayActive: {
-    backgroundColor: colors.primary + '30',
+    backgroundColor: 'rgba(139, 92, 246, 0.25)',
     color: colors.primaryLight,
   },
   penaltyRow: {
@@ -201,7 +209,7 @@ const styles = StyleSheet.create({
   escalatingBadge: {
     fontSize: fontSize.xs,
     color: colors.warning,
-    backgroundColor: colors.warning + '20',
+    backgroundColor: 'rgba(255, 176, 32, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
@@ -210,7 +218,7 @@ const styles = StyleSheet.create({
   noEscapeBadge: {
     fontSize: fontSize.xs,
     color: colors.danger,
-    backgroundColor: colors.danger + '20',
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
@@ -221,6 +229,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 100,
     gap: spacing.sm,
+  },
+  emptyIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(108, 60, 225, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   emptyText: {
     fontSize: fontSize.xl,
@@ -240,13 +259,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(108, 60, 225, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: colors.primary,
+    shadowColor: '#6C3CE1',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
 });

@@ -2,6 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
@@ -29,15 +31,17 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+const stackScreenOptions = {
+  headerStyle: { backgroundColor: 'transparent' },
+  headerTransparent: true,
+  headerBlurEffect: 'dark' as const,
+  headerTintColor: colors.text,
+  contentStyle: { backgroundColor: colors.background },
+};
+
 function AlarmStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="AlarmList" component={AlarmListScreen} options={{ title: 'Alarms' }} />
       <Stack.Screen name="CreateAlarm" component={CreateAlarmScreen} options={{ title: 'New Alarm' }} />
       <Stack.Screen
@@ -56,13 +60,7 @@ function AlarmStack() {
 
 function StatsStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Stats' }} />
       <Stack.Screen name="Charity" component={CharityScreen} options={{ title: 'Charities' }} />
     </Stack.Navigator>
@@ -71,13 +69,7 @@ function StatsStack() {
 
 function SocialStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="SocialFeed" component={SocialFeedScreen} options={{ title: 'Social' }} />
       <Stack.Screen name="Battles" component={BattleListScreen} options={{ title: 'Battles' }} />
       <Stack.Screen name="Groups" component={GroupListScreen} options={{ title: 'Groups' }} />
@@ -88,13 +80,7 @@ function SocialStack() {
 
 function ProfileStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ title: 'Wallet' }} />
       <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ title: 'Achievements' }} />
@@ -111,13 +97,13 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          backgroundColor: 'rgba(10, 5, 21, 0.85)',
+          borderTopColor: 'rgba(139, 92, 246, 0.15)',
           borderTopWidth: 0.5,
           paddingTop: 6,
           height: 88,
         },
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.primaryLight,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 11,
