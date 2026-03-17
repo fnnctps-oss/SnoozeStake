@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   Switch,
   StyleSheet,
   RefreshControl,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
@@ -21,45 +20,13 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function LiquidGlassAlarmCard({
   item,
-  index,
   onPress,
   onToggle,
 }: {
   item: Alarm;
-  index: number;
   onPress: () => void;
   onToggle: () => void;
 }) {
-  const shimmer = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 3000,
-          delay: index * 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shimmer, {
-          toValue: 0,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, []);
-
-  const shimmerTranslate = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-200, 200],
-  });
-
-  const shimmerOpacity = shimmer.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0.15, 0],
-  });
-
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     const period = h >= 12 ? 'PM' : 'AM';
@@ -78,16 +45,6 @@ function LiquidGlassAlarmCard({
         />
         {/* Top glass highlight */}
         <View style={styles.glassHighlight} />
-        {/* Animated shimmer */}
-        <Animated.View
-          style={[
-            styles.shimmer,
-            {
-              transform: [{ translateX: shimmerTranslate }],
-              opacity: shimmerOpacity,
-            },
-          ]}
-        />
         <View style={styles.alarmRow}>
           <View style={styles.alarmInfo}>
             <Text style={[styles.alarmTime, !item.isEnabled && styles.textDisabled]}>
@@ -165,10 +122,9 @@ export function AlarmListScreen({ navigation }: any) {
     setRefreshing(false);
   };
 
-  const renderAlarm = ({ item, index }: { item: Alarm; index: number }) => (
+  const renderAlarm = ({ item }: { item: Alarm }) => (
     <LiquidGlassAlarmCard
       item={item}
-      index={index}
       onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
       onToggle={() => handleToggle(item)}
     />
@@ -232,14 +188,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  shimmer: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 120,
-    backgroundColor: 'rgba(255, 255, 255, 1)',
-    borderRadius: 60,
   },
   alarmRow: {
     flexDirection: 'row',

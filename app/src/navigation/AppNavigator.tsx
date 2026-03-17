@@ -97,28 +97,40 @@ function GlassTabIcon({ name, color, focused }: { name: string; color: string; f
       tabStyles.iconWrap,
       focused && tabStyles.iconWrapActive,
     ]}>
-      <Icon name={name} size={22} color={color} />
+      {/* Inner top highlight — mimics Apple liquid glass refraction */}
+      {focused && <View style={tabStyles.innerHighlight} />}
+      <Icon name={focused ? name.replace('-outline', '') : name} size={20} color={color} />
     </View>
   );
 }
 
 const tabStyles = StyleSheet.create({
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 48,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(108, 60, 225, 0.30)',
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.5)',
-    shadowColor: '#8B5CF6',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    shadowColor: '#fff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  innerHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 4,
+    right: 4,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 1,
   },
 });
 
