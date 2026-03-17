@@ -18,11 +18,11 @@ import { Icon } from '../components/Icon';
 // Map tone IDs to bundled assets
 const TONE_FILES: Record<string, any> = {
   classic: require('../../assets/tones/classic.wav'),
-  gentle: require('../../assets/tones/gentle.wav'),
-  rooster: require('../../assets/tones/rooster.wav'),
+  gentle: require('../../assets/tones/gentle.mp3'),
+  rooster: require('../../assets/tones/rooster.mp3'),
   digital: require('../../assets/tones/digital.wav'),
-  birds: require('../../assets/tones/birds.wav'),
-  ocean: require('../../assets/tones/ocean.wav'),
+  birds: require('../../assets/tones/birds.mp3'),
+  ocean: require('../../assets/tones/ocean.mp3'),
   chime: require('../../assets/tones/chime.wav'),
   buzzer: require('../../assets/tones/buzzer.wav'),
 };

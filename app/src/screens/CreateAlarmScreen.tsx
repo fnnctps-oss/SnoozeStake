@@ -48,11 +48,11 @@ const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 // ─── Alarm Tones ──────────────────────────────────────────────
 const BUILTIN_TONES = [
   { id: 'classic', name: 'Classic Alarm', icon: 'alarm-outline', file: require('../../assets/tones/classic.wav') },
-  { id: 'gentle', name: 'Gentle Wake', icon: 'water-outline', file: require('../../assets/tones/gentle.wav') },
-  { id: 'rooster', name: 'Rooster', icon: 'sunny-outline', file: require('../../assets/tones/rooster.wav') },
+  { id: 'gentle', name: 'Gentle Wake', icon: 'water-outline', file: require('../../assets/tones/gentle.mp3') },
+  { id: 'rooster', name: 'Rooster', icon: 'sunny-outline', file: require('../../assets/tones/rooster.mp3') },
   { id: 'digital', name: 'Digital Beep', icon: 'hardware-chip-outline', file: require('../../assets/tones/digital.wav') },
-  { id: 'birds', name: 'Morning Birds', icon: 'leaf-outline', file: require('../../assets/tones/birds.wav') },
-  { id: 'ocean', name: 'Ocean Waves', icon: 'earth-outline', file: require('../../assets/tones/ocean.wav') },
+  { id: 'birds', name: 'Morning Birds', icon: 'leaf-outline', file: require('../../assets/tones/birds.mp3') },
+  { id: 'ocean', name: 'Ocean Waves', icon: 'earth-outline', file: require('../../assets/tones/ocean.mp3') },
   { id: 'chime', name: 'Soft Chime', icon: 'notifications-outline', file: require('../../assets/tones/chime.wav') },
   { id: 'buzzer', name: 'Buzzer', icon: 'volume-high-outline', file: require('../../assets/tones/buzzer.wav') },
 ];
