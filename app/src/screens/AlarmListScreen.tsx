@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,48 +7,58 @@ import {
   Switch,
   StyleSheet,
   RefreshControl,
+  Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAlarmStore } from '../store/alarmStore';
 import { alarmApi } from '../services/api';
 import { Alarm } from '../types';
 import { Icon } from '../components/Icon';
 import { GradientBackground } from '../components/GradientBackground';
-import { GlassCard } from '../components/GlassCard';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function AlarmListScreen({ navigation }: any) {
-  const { alarms, setAlarms, toggleAlarm } = useAlarmStore();
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadAlarms = async () => {
-    try {
-      const { alarms: data } = await alarmApi.list();
-      setAlarms(data);
-    } catch {
-      // Silently fail on refresh
-    }
-  };
+function LiquidGlassAlarmCard({
+  item,
+  index,
+  onPress,
+  onToggle,
+}: {
+  item: Alarm;
+  index: number;
+  onPress: () => void;
+  onToggle: () => void;
+}) {
+  const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadAlarms();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 3000,
+          delay: index * 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmer, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
   }, []);
 
-  const handleToggle = async (alarm: Alarm) => {
-    toggleAlarm(alarm.id);
-    try {
-      await alarmApi.toggle(alarm.id);
-    } catch {
-      toggleAlarm(alarm.id);
-    }
-  };
+  const shimmerTranslate = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-200, 200],
+  });
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadAlarms();
-    setRefreshing(false);
-  };
+  const shimmerOpacity = shimmer.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0.15, 0],
+  });
 
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
@@ -57,15 +67,27 @@ export function AlarmListScreen({ navigation }: any) {
     return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
   };
 
-  const renderAlarm = ({ item }: { item: Alarm }) => (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
-    >
-      <GlassCard
-        variant="purple"
-        style={[styles.alarmCard, !item.isEnabled && styles.alarmDisabled]}
-      >
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
+      <View style={[styles.liquidCard, !item.isEnabled && styles.alarmDisabled]}>
+        <LinearGradient
+          colors={['rgba(108, 60, 225, 0.22)', 'rgba(139, 92, 246, 0.08)', 'rgba(108, 60, 225, 0.15)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Top glass highlight */}
+        <View style={styles.glassHighlight} />
+        {/* Animated shimmer */}
+        <Animated.View
+          style={[
+            styles.shimmer,
+            {
+              transform: [{ translateX: shimmerTranslate }],
+              opacity: shimmerOpacity,
+            },
+          ]}
+        />
         <View style={styles.alarmRow}>
           <View style={styles.alarmInfo}>
             <Text style={[styles.alarmTime, !item.isEnabled && styles.textDisabled]}>
@@ -101,13 +123,55 @@ export function AlarmListScreen({ navigation }: any) {
           </View>
           <Switch
             value={item.isEnabled}
-            onValueChange={() => handleToggle(item)}
+            onValueChange={onToggle}
             trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(108,60,225,0.5)' }}
             thumbColor={item.isEnabled ? colors.primaryLight : colors.textMuted}
           />
         </View>
-      </GlassCard>
+      </View>
     </TouchableOpacity>
+  );
+}
+
+export function AlarmListScreen({ navigation }: any) {
+  const { alarms, setAlarms, toggleAlarm } = useAlarmStore();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadAlarms = async () => {
+    try {
+      const { alarms: data } = await alarmApi.list();
+      setAlarms(data);
+    } catch {
+      // Silently fail on refresh
+    }
+  };
+
+  useEffect(() => {
+    loadAlarms();
+  }, []);
+
+  const handleToggle = async (alarm: Alarm) => {
+    toggleAlarm(alarm.id);
+    try {
+      await alarmApi.toggle(alarm.id);
+    } catch {
+      toggleAlarm(alarm.id);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAlarms();
+    setRefreshing(false);
+  };
+
+  const renderAlarm = ({ item, index }: { item: Alarm; index: number }) => (
+    <LiquidGlassAlarmCard
+      item={item}
+      index={index}
+      onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
+      onToggle={() => handleToggle(item)}
+    />
   );
 
   return (
@@ -150,12 +214,32 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     paddingTop: spacing.md,
   },
-  alarmCard: {
+  liquidCard: {
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.35)',
     padding: spacing.lg,
+    overflow: 'hidden',
     shadowColor: '#6C3CE1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+  },
+  glassHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 120,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    borderRadius: 60,
   },
   alarmRow: {
     flexDirection: 'row',

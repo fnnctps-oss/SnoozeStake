@@ -104,22 +104,21 @@ function GlassTabIcon({ name, color, focused }: { name: string; color: string; f
 
 const tabStyles = StyleSheet.create({
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'transparent',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(108, 60, 225, 0.25)',
-    borderColor: 'rgba(139, 92, 246, 0.4)',
+    backgroundColor: 'rgba(108, 60, 225, 0.30)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.5)',
     shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
 });
 
