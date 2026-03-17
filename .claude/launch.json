@@ -11,7 +11,7 @@
     {
       "name": "expo",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start"],
+      "runtimeArgs": ["expo", "start", "--clear"],
       "cwd": "app",
       "port": 8081
     }

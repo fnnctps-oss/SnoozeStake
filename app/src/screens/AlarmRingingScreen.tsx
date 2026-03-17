@@ -17,14 +17,18 @@ import { Icon } from '../components/Icon';
 
 // Map tone IDs to bundled assets
 const TONE_FILES: Record<string, any> = {
-  classic: require('../../assets/tones/classic.wav'),
-  gentle: require('../../assets/tones/gentle.wav'),
-  rooster: require('../../assets/tones/rooster.wav'),
-  digital: require('../../assets/tones/digital.wav'),
-  birds: require('../../assets/tones/birds.wav'),
-  ocean: require('../../assets/tones/ocean.wav'),
-  chime: require('../../assets/tones/chime.wav'),
-  buzzer: require('../../assets/tones/buzzer.wav'),
+  radar: require('../../assets/tones/radar.wav'),
+  apex: require('../../assets/tones/apex.wav'),
+  beacon: require('../../assets/tones/beacon.wav'),
+  constellation: require('../../assets/tones/constellation.wav'),
+  cosmic: require('../../assets/tones/cosmic.wav'),
+  illuminate: require('../../assets/tones/illuminate.wav'),
+  nightowl: require('../../assets/tones/nightowl.wav'),
+  presto: require('../../assets/tones/presto.wav'),
+  ripples: require('../../assets/tones/ripples.wav'),
+  sencha: require('../../assets/tones/sencha.wav'),
+  silk: require('../../assets/tones/silk.wav'),
+  summit: require('../../assets/tones/summit.wav'),
 };
 
 export function AlarmRingingScreen({ navigation, route }: any) {
