@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
@@ -97,8 +98,17 @@ function GlassTabIcon({ name, color, focused }: { name: string; color: string; f
       tabStyles.iconWrap,
       focused && tabStyles.iconWrapActive,
     ]}>
-      {/* Inner top highlight — mimics Apple liquid glass refraction */}
-      {focused && <View style={tabStyles.innerHighlight} />}
+      {focused && (
+        <>
+          <LinearGradient
+            colors={['rgba(108, 60, 225, 0.30)', 'rgba(139, 92, 246, 0.12)', 'rgba(108, 60, 225, 0.22)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={tabStyles.glassHighlight} />
+        </>
+      )}
       <Icon name={focused ? name.replace('-outline', '') : name} size={20} color={color} />
     </View>
   );
@@ -106,31 +116,29 @@ function GlassTabIcon({ name, color, focused }: { name: string; color: string; f
 
 const tabStyles = StyleSheet.create({
   iconWrap: {
-    width: 48,
-    height: 32,
-    borderRadius: 16,
+    width: 52,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
     overflow: 'hidden',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.35)',
+    shadowColor: '#6C3CE1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
-  innerHighlight: {
+  glassHighlight: {
     position: 'absolute',
     top: 0,
-    left: 4,
-    right: 4,
+    left: 0,
+    right: 0,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
 });
 
