@@ -204,6 +204,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const [difficulty, setDifficulty] = useState<TaskDifficulty>(existingAlarm?.wakeUpTaskDifficulty || 'EASY');
   const [destination, setDestination] = useState<PenaltyDestination>(existingAlarm?.penaltyDestination || 'SAVINGS');
   const [noEscape, setNoEscape] = useState(existingAlarm?.noEscapeMode || false);
+  const [snoozeDuration, setSnoozeDuration] = useState(existingAlarm?.snoozeDurationMinutes || 5);
   const [saving, setSaving] = useState(false);
 
   // Tone state
@@ -343,6 +344,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       wakeUpTaskDifficulty: difficulty,
       penaltyDestination: destination,
       noEscapeMode: noEscape,
+      snoozeDurationMinutes: snoozeDuration,
       soundUrl: selectedTone === 'custom' ? customToneUri : selectedTone,
     };
 
@@ -550,6 +552,22 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           trackColor={{ false: colors.surfaceLight, true: colors.danger + '80' }}
           thumbColor={escalating ? colors.danger : colors.textMuted}
         />
+      </View>
+
+      {/* ─── Snooze Duration ─── */}
+      <Text style={styles.sectionTitle}>Snooze Duration</Text>
+      <View style={styles.optionRow}>
+        {[1, 2, 3, 5, 10].map((mins) => (
+          <TouchableOpacity
+            key={mins}
+            style={[styles.optionButton, snoozeDuration === mins && styles.optionSelected]}
+            onPress={() => setSnoozeDuration(mins)}
+          >
+            <Text style={[styles.optionText, snoozeDuration === mins && styles.optionTextSelected]}>
+              {mins} min
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* ─── Penalty Destination ─── */}

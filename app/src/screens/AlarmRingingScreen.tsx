@@ -14,6 +14,7 @@ import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { snoozeApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
+import * as Notifications from 'expo-notifications';
 
 // Map tone IDs to bundled assets
 const TONE_FILES: Record<string, any> = {
@@ -109,9 +110,30 @@ export function AlarmRingingScreen({ navigation, route }: any) {
     try {
       const result = await snoozeApi.snooze(alarm.id, snoozeCount + 1);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setSnoozeCount((c) => c + 1);
-      setTotalPenalty((p) => p + Number(result.snoozeEvent.penaltyAmount));
+      const newSnoozeCount = snoozeCount + 1;
+      const penaltyAmount = Number(result.snoozeEvent.penaltyAmount);
+      setSnoozeCount(newSnoozeCount);
+      setTotalPenalty((p) => p + penaltyAmount);
       updateUser({ walletBalance: Number(result.walletBalance) });
+
+      // Schedule the alarm to fire again after snooze duration
+      const snoozeMins = alarm.snoozeDurationMinutes || 5;
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `⏰ Alarm — ${alarm.label || 'Wake Up!'}`,
+          body: `Snoozed ${newSnoozeCount}x — $${(totalPenalty + penaltyAmount).toFixed(2)} spent. Wake up!`,
+          sound: true,
+          data: {
+            alarmId: alarm.id,
+            type: 'alarm',
+          },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: snoozeMins * 60,
+          repeats: false,
+        },
+      });
 
       stopSound();
       navigation.goBack();
