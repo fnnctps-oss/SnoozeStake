@@ -88,9 +88,12 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
 
 // ===== MATH COMPONENT =====
 function MathTask({ difficulty, onComplete }: { difficulty: string; onComplete: () => void }) {
+  const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD'];
+  const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
   const [problem, setProblem] = useState(generateMathProblem(difficulty));
   const [answer, setAnswer] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const [skipsUsed, setSkipsUsed] = useState(0);
 
   const handleSubmit = async () => {
     const userAnswer = parseInt(answer, 10);
@@ -102,16 +105,32 @@ function MathTask({ difficulty, onComplete }: { difficulty: string; onComplete: 
       setAttempts((a) => a + 1);
       setAnswer('');
       if (attempts >= 2) {
-        setProblem(generateMathProblem(difficulty));
+        setProblem(generateMathProblem(currentDifficulty));
         setAttempts(0);
       }
     }
   };
 
+  const handleNext = () => {
+    // Drop difficulty one level if possible
+    const currentIndex = DIFFICULTIES.indexOf(currentDifficulty);
+    let nextDiff = currentDifficulty;
+    if (currentIndex > 0) {
+      nextDiff = DIFFICULTIES[currentIndex - 1];
+      setCurrentDifficulty(nextDiff);
+    }
+    setProblem(generateMathProblem(nextDiff));
+    setAnswer('');
+    setAttempts(0);
+    setSkipsUsed((s) => s + 1);
+  };
+
+  const difficultyLabel = currentDifficulty === 'EASY' ? 'Easy' : currentDifficulty === 'MEDIUM' ? 'Medium' : 'Hard';
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Solve to Dismiss</Text>
-      <Text style={styles.subtitle}>{difficulty} Math Problem</Text>
+      <Text style={styles.subtitle}>{difficultyLabel} Math Problem</Text>
       <View style={styles.taskCard}>
         <Text style={styles.mathText}>{problem.question} = ?</Text>
       </View>
@@ -127,8 +146,13 @@ function MathTask({ difficulty, onComplete }: { difficulty: string; onComplete: 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <Text style={styles.nextText}>
+          Next{currentDifficulty !== 'EASY' ? ' (easier)' : ''}
+        </Text>
+      </TouchableOpacity>
       <Text style={styles.hint}>
-        {attempts > 0 ? `Wrong: ${attempts}/3` : 'Enter the correct answer'}
+        {attempts > 0 ? `Wrong: ${attempts}/3` : skipsUsed > 0 ? `Skipped ${skipsUsed}x` : 'Enter the correct answer'}
       </Text>
     </View>
   );
@@ -342,6 +366,20 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: '700',
     color: colors.background,
+  },
+  nextButton: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center' as const,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  nextText: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   hint: {
     fontSize: fontSize.sm,
