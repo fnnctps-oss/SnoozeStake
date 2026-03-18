@@ -12,6 +12,7 @@ import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
 import { GradientBackground } from '../components/GradientBackground';
 import { GlassCard } from '../components/GlassCard';
+import { checkAndNotifyAchievements } from '../services/achievements';
 
 export function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -31,6 +32,12 @@ export function DashboardScreen() {
           totalSaved: Number(data.user.totalSaved),
           currentStreak: data.user.currentStreak,
           longestStreak: data.user.longestStreak,
+        });
+        // Check for newly unlocked achievements
+        checkAndNotifyAchievements({
+          currentStreak: data.user.currentStreak,
+          longestStreak: data.user.longestStreak,
+          totalSaved: Number(data.user.totalSaved),
         });
       }
     } catch {

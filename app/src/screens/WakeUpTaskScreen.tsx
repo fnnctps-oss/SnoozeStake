@@ -12,6 +12,8 @@ import * as Haptics from 'expo-haptics';
 import { Accelerometer, Pedometer } from 'expo-sensors';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { snoozeApi } from '../services/api';
+import { checkAndNotifyAchievements } from '../services/achievements';
+import { useAuthStore } from '../store/authStore';
 
 // ===== MATH TASK =====
 interface MathProblem { question: string; answer: number; }
@@ -55,6 +57,8 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
   const { alarm, snoozeCount, totalPenalty } = route.params;
   const taskType = alarm.wakeUpTaskType || 'MATH';
   const difficulty = alarm.wakeUpTaskDifficulty || 'EASY';
+  const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   useEffect(() => {
     Vibration.vibrate([300, 300], true);
@@ -65,12 +69,26 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
     Vibration.cancel();
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      await snoozeApi.wake({
+      const result = await snoozeApi.wake({
         alarmId: alarm.id,
         snoozeCount,
         totalPenalty,
         taskCompleted: taskType,
       });
+      // Check for newly unlocked achievements
+      if (result) {
+        const updatedData = {
+          currentStreak: result.currentStreak ?? user?.currentStreak ?? 0,
+          longestStreak: result.longestStreak ?? user?.longestStreak ?? 0,
+          totalSaved: Number(result.moneySaved ?? 0) + Number(user?.totalSaved ?? 0),
+        };
+        updateUser({
+          currentStreak: updatedData.currentStreak,
+          longestStreak: updatedData.longestStreak,
+          totalSaved: updatedData.totalSaved,
+        });
+        checkAndNotifyAchievements(updatedData);
+      }
     } catch {}
     Alert.alert('Great job!', 'Good morning!', [
       { text: 'OK', onPress: () => navigation.popToTop() },

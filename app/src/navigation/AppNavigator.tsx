@@ -7,7 +7,7 @@ import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { useAlarmStore } from '../store/alarmStore';
 import { Icon } from '../components/Icon';
-import { requestNotificationPermissions } from '../services/notifications';
+import { requestAllPermissions } from '../services/permissions';
 
 // Screens
 import { AlarmListScreen } from '../screens/AlarmListScreen';
@@ -165,9 +165,9 @@ export function AppNavigator() {
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const alarms = useAlarmStore((s) => s.alarms);
 
-  // Request notification permissions on mount
+  // Request all permissions on mount (notifications, motion/pedometer)
   useEffect(() => {
-    requestNotificationPermissions();
+    requestAllPermissions();
   }, []);
 
   // Handle notification taps → navigate to AlarmRinging screen
