@@ -21,7 +21,7 @@ paymentRouter.get('/config', (_req: AuthRequest, res) => {
 
 // POST /api/payments/create-payment-intent — Create a PaymentIntent for wallet top-up
 const topUpSchema = z.object({
-  amount: z.number().min(1).max(500), // $1 – $500
+  amount: z.number().min(10).max(500), // $10 – $500
 });
 
 paymentRouter.post('/create-payment-intent', async (req: AuthRequest, res, next) => {

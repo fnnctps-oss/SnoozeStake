@@ -8,6 +8,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  Switch,
+  Modal,
 } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { Icon } from '../components/Icon';
@@ -17,15 +19,27 @@ import { paymentApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { colors, spacing, borderRadius } from '../utils/theme';
 
-const TOP_UP_AMOUNTS = [5, 10, 20, 50, 100];
+const TOP_UP_TIERS = [
+  { amount: 10, label: '$10', badge: null },
+  { amount: 25, label: '$25', badge: 'Most Popular' },
+  { amount: 50, label: '$50', badge: null },
+];
+
+const AUTO_RELOAD_AMOUNTS = [10, 25, 50];
+const LOW_BALANCE_THRESHOLD_WARN = 5;
+const LOW_BALANCE_THRESHOLD_URGENT = 2;
 
 export function WalletScreen({ navigation }: any) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const [selectedAmount, setSelectedAmount] = useState(10);
+  const [selectedAmount, setSelectedAmount] = useState(25);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [walletData, setWalletData] = useState<any>(null);
+  const [autoReload, setAutoReload] = useState(false);
+  const [autoReloadAmount, setAutoReloadAmount] = useState(25);
+  const [autoReloadThreshold, setAutoReloadThreshold] = useState(2);
+  const [showEmptyModal, setShowEmptyModal] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
 
   const fetchData = useCallback(async () => {
@@ -36,6 +50,10 @@ export function WalletScreen({ navigation }: any) {
       ]);
       setWalletData(wallet);
       setTransactions(history.transactions);
+      // Check for $0 balance
+      if (Number(wallet.walletBalance) <= 0) {
+        setShowEmptyModal(true);
+      }
     } catch (err) {
       console.warn('Failed to fetch wallet data:', err);
     }
@@ -51,40 +69,33 @@ export function WalletScreen({ navigation }: any) {
     setRefreshing(false);
   };
 
-  const handleTopUp = async () => {
+  const handleTopUp = async (amount?: number) => {
+    const topUpAmount = amount || selectedAmount;
     setLoading(true);
     try {
-      // 1. Create PaymentIntent on server
-      const { clientSecret } = await paymentApi.createPaymentIntent(selectedAmount);
-
-      // 2. Initialize Payment Sheet
+      const { clientSecret } = await paymentApi.createPaymentIntent(topUpAmount);
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: clientSecret,
         merchantDisplayName: 'SnoozeStake',
         style: 'alwaysDark',
         defaultBillingDetails: {},
       });
-
       if (initError) {
         Alert.alert('Error', initError.message);
         setLoading(false);
         return;
       }
-
-      // 3. Present Payment Sheet
       const { error: payError } = await presentPaymentSheet();
-
       if (payError) {
         if (payError.code !== 'Canceled') {
           Alert.alert('Payment Failed', payError.message);
         }
       } else {
-        // Payment succeeded — update wallet locally
-        Alert.alert('Success! 🎉', `$${selectedAmount}.00 added to your wallet`);
+        Alert.alert('Success!', `$${topUpAmount}.00 added to your wallet`);
         updateUser({
-          walletBalance: Number(walletData?.walletBalance || 0) + selectedAmount,
+          walletBalance: Number(walletData?.walletBalance || 0) + topUpAmount,
         });
-        // Refresh data
+        setShowEmptyModal(false);
         await fetchData();
       }
     } catch (err: any) {
@@ -139,8 +150,38 @@ export function WalletScreen({ navigation }: any) {
   const totalSnoozed = Number(walletData?.totalSnoozed || 0);
   const totalSaved = Number(walletData?.totalSaved || 0);
 
+  // Determine warning level
+  const warningLevel = balance <= 0 ? 'critical' : balance <= LOW_BALANCE_THRESHOLD_URGENT ? 'urgent' : balance <= LOW_BALANCE_THRESHOLD_WARN ? 'warning' : null;
+
   return (
     <GradientBackground>
+      {/* $0 balance modal */}
+      <Modal visible={showEmptyModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Icon name="warning" size={48} color={colors.danger} />
+            <Text style={styles.modalTitle}>Wallet Empty!</Text>
+            <Text style={styles.modalDesc}>
+              Your balance is $0. You won't be charged for snoozing until you add funds, but your alarms won't have stakes.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleTopUp(25)}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <Text style={styles.modalButtonText}>Add $25 Now</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowEmptyModal(false)}>
+              <Text style={styles.modalDismiss}>Later</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
@@ -149,6 +190,26 @@ export function WalletScreen({ navigation }: any) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryLight} />}
         ListHeaderComponent={
           <>
+            {/* Low balance warning banner */}
+            {warningLevel === 'warning' && (
+              <View style={styles.bannerWarning}>
+                <Icon name="alert-circle-outline" size={18} color="#000" />
+                <Text style={styles.bannerText}>Low balance — add funds to keep your stakes active</Text>
+              </View>
+            )}
+            {warningLevel === 'urgent' && (
+              <View style={styles.bannerUrgent}>
+                <Icon name="alert-circle" size={18} color="#fff" />
+                <Text style={styles.bannerTextWhite}>Balance below $2 — snooze penalties may fail!</Text>
+              </View>
+            )}
+            {warningLevel === 'critical' && (
+              <View style={styles.bannerCritical}>
+                <Icon name="close-circle" size={18} color="#fff" />
+                <Text style={styles.bannerTextWhite}>$0 balance — add funds to activate alarm stakes</Text>
+              </View>
+            )}
+
             {/* Balance Card */}
             <GlassCard variant="purple" style={styles.balanceCard}>
               <Text style={styles.balanceLabel}>Wallet Balance</Text>
@@ -165,17 +226,29 @@ export function WalletScreen({ navigation }: any) {
               </View>
             </GlassCard>
 
-            {/* Top Up Section */}
+            {/* Top Up Tiers */}
             <Text style={styles.sectionTitle}>Add Funds</Text>
-            <View style={styles.amountRow}>
-              {TOP_UP_AMOUNTS.map((amt) => (
+            <View style={styles.tierRow}>
+              {TOP_UP_TIERS.map((tier) => (
                 <TouchableOpacity
-                  key={amt}
-                  style={[styles.amountButton, selectedAmount === amt && styles.amountSelected]}
-                  onPress={() => setSelectedAmount(amt)}
+                  key={tier.amount}
+                  style={[
+                    styles.tierCard,
+                    selectedAmount === tier.amount && styles.tierCardSelected,
+                    tier.badge ? styles.tierCardPopular : null,
+                  ]}
+                  onPress={() => setSelectedAmount(tier.amount)}
                 >
-                  <Text style={[styles.amountText, selectedAmount === amt && styles.amountTextSelected]}>
-                    ${amt}
+                  {tier.badge && (
+                    <View style={styles.badgeWrap}>
+                      <Text style={styles.badgeText}>{tier.badge}</Text>
+                    </View>
+                  )}
+                  <Text style={[styles.tierAmount, selectedAmount === tier.amount && styles.tierAmountSelected]}>
+                    {tier.label}
+                  </Text>
+                  <Text style={styles.tierSubtext}>
+                    {tier.amount === 10 ? 'Starter' : tier.amount === 25 ? 'Best Value' : 'Power User'}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -183,7 +256,7 @@ export function WalletScreen({ navigation }: any) {
 
             <TouchableOpacity
               style={[styles.topUpButton, loading && styles.topUpButtonDisabled]}
-              onPress={handleTopUp}
+              onPress={() => handleTopUp()}
               disabled={loading}
             >
               {loading ? (
@@ -195,6 +268,49 @@ export function WalletScreen({ navigation }: any) {
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Auto-Reload */}
+            <GlassCard style={styles.autoReloadCard}>
+              <View style={styles.autoReloadHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.autoReloadTitle}>Auto-Reload</Text>
+                  <Text style={styles.autoReloadDesc}>
+                    Automatically top up when balance drops below ${autoReloadThreshold}
+                  </Text>
+                </View>
+                <Switch
+                  value={autoReload}
+                  onValueChange={setAutoReload}
+                  trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(0, 230, 118, 0.4)' }}
+                  thumbColor={autoReload ? colors.accent : colors.textMuted}
+                />
+              </View>
+
+              {autoReload && (
+                <View style={styles.autoReloadOptions}>
+                  <Text style={styles.autoReloadLabel}>Reload amount:</Text>
+                  <View style={styles.autoReloadRow}>
+                    {AUTO_RELOAD_AMOUNTS.map((amt) => (
+                      <TouchableOpacity
+                        key={amt}
+                        style={[
+                          styles.autoReloadBtn,
+                          autoReloadAmount === amt && styles.autoReloadBtnSelected,
+                        ]}
+                        onPress={() => setAutoReloadAmount(amt)}
+                      >
+                        <Text style={[
+                          styles.autoReloadBtnText,
+                          autoReloadAmount === amt && styles.autoReloadBtnTextSelected,
+                        ]}>
+                          ${amt}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </GlassCard>
 
             {/* Transaction History */}
             <Text style={styles.sectionTitle}>Transaction History</Text>
@@ -214,6 +330,95 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: 120,
   },
+  // Banners
+  bannerWarning: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    backgroundColor: 'rgba(255, 176, 32, 0.9)',
+    borderRadius: borderRadius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  bannerUrgent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    borderRadius: borderRadius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  bannerCritical: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    backgroundColor: 'rgba(220, 38, 38, 0.95)',
+    borderRadius: borderRadius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  bannerText: {
+    flex: 1,
+    color: '#000',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  bannerTextWhite: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    padding: 32,
+  },
+  modalCard: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    width: '100%',
+  },
+  modalTitle: {
+    color: colors.danger,
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: 12,
+  },
+  modalDesc: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center' as const,
+    marginTop: 8,
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  modalButton: {
+    backgroundColor: colors.accent,
+    borderRadius: borderRadius.md,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    marginBottom: 12,
+  },
+  modalButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  modalDismiss: {
+    color: colors.textMuted,
+    fontSize: 14,
+    paddingVertical: 8,
+  },
+  // Balance
   balanceCard: {
     alignItems: 'center' as const,
     paddingVertical: 28,
@@ -251,31 +456,55 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  amountRow: {
+  // Tiers
+  tierRow: {
     flexDirection: 'row' as const,
-    gap: 8,
+    gap: 10,
     marginBottom: 16,
   },
-  amountButton: {
+  tierCard: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: borderRadius.md,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    borderRadius: borderRadius.lg,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center' as const,
   },
-  amountSelected: {
+  tierCardSelected: {
     backgroundColor: 'rgba(108, 60, 225, 0.3)',
     borderColor: 'rgba(139, 92, 246, 0.5)',
   },
-  amountText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
+  tierCardPopular: {
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
-  amountTextSelected: {
+  badgeWrap: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 6,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  tierAmount: {
+    color: colors.textSecondary,
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  tierAmountSelected: {
     color: colors.text,
+  },
+  tierSubtext: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
   },
   topUpButton: {
     flexDirection: 'row' as const,
@@ -285,20 +514,75 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
   },
-  topUpButtonDisabled: {
-    opacity: 0.6,
-  },
+  topUpButtonDisabled: { opacity: 0.6 },
   topUpButtonText: {
     color: '#000',
     fontSize: 17,
     fontWeight: '700',
   },
+  // Auto-Reload
+  autoReloadCard: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: 20,
+  },
+  autoReloadHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  autoReloadTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  autoReloadDesc: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  autoReloadOptions: {
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 14,
+  },
+  autoReloadLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  autoReloadRow: {
+    flexDirection: 'row' as const,
+    gap: 8,
+  },
+  autoReloadBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center' as const,
+  },
+  autoReloadBtnSelected: {
+    backgroundColor: 'rgba(108, 60, 225, 0.3)',
+    borderColor: 'rgba(139, 92, 246, 0.5)',
+  },
+  autoReloadBtnText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  autoReloadBtnTextSelected: {
+    color: colors.text,
+  },
+  // Transactions
   txRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
