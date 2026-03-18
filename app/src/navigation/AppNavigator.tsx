@@ -1,10 +1,13 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Notifications from 'expo-notifications';
 import { colors } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
+import { useAlarmStore } from '../store/alarmStore';
 import { Icon } from '../components/Icon';
+import { requestNotificationPermissions } from '../services/notifications';
 
 // Screens
 import { AlarmListScreen } from '../screens/AlarmListScreen';
@@ -159,17 +162,44 @@ function MainTabs() {
 export function AppNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [hasOnboarded, setHasOnboarded] = React.useState(true); // TODO: set back to false for production
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+  const alarms = useAlarmStore((s) => s.alarms);
+
+  // Request notification permissions on mount
+  useEffect(() => {
+    requestNotificationPermissions();
+  }, []);
+
+  // Handle notification taps → navigate to AlarmRinging screen
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.type === 'alarm' && data?.alarmId) {
+        // Find the alarm in our store
+        const alarm = alarms.find((a) => a.id === data.alarmId);
+        if (alarm && navigationRef.current) {
+          // Navigate to AlarmRinging inside the Alarms tab
+          navigationRef.current.navigate('AlarmsTab', {
+            screen: 'AlarmRinging',
+            params: { alarm },
+          });
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [alarms]);
 
   if (isAuthenticated && !hasOnboarded) {
     return (
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <OnboardingScreen onComplete={() => setHasOnboarded(true)} />
       </NavigationContainer>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainTabs} />

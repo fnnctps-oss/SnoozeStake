@@ -18,6 +18,7 @@ import { useAlarmStore } from '../store/alarmStore';
 import { alarmApi } from '../services/api';
 import { WakeUpTaskType, TaskDifficulty, PenaltyDestination } from '../types';
 import { Icon } from '../components/Icon';
+import { scheduleAlarmNotifications, cancelAlarmNotifications, requestNotificationPermissions } from '../services/notifications';
 import { GradientBackground } from '../components/GradientBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -347,13 +348,29 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 
     setSaving(true);
     try {
+      // Ensure notification permissions
+      await requestNotificationPermissions();
+
+      let savedAlarm: any;
       if (existingAlarm) {
-        const { alarm } = await alarmApi.update(existingAlarm.id, data);
-        updateAlarm(existingAlarm.id, alarm);
+        const result = await alarmApi.update(existingAlarm.id, data);
+        savedAlarm = result.alarm;
+        updateAlarm(existingAlarm.id, savedAlarm);
       } else {
-        const { alarm } = await alarmApi.create(data);
-        addAlarm(alarm);
+        const result = await alarmApi.create(data);
+        savedAlarm = result.alarm;
+        addAlarm(savedAlarm);
       }
+
+      // Schedule local notifications for this alarm
+      await scheduleAlarmNotifications({
+        id: savedAlarm.id,
+        label: savedAlarm.label,
+        time: savedAlarm.time,
+        daysOfWeek: savedAlarm.daysOfWeek,
+        isActive: savedAlarm.isEnabled !== false,
+      });
+
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Error', err.message);
@@ -371,6 +388,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         style: 'destructive',
         onPress: async () => {
           try {
+            await cancelAlarmNotifications(existingAlarm.id);
             await alarmApi.remove(existingAlarm.id);
             removeAlarm(existingAlarm.id);
             navigation.goBack();

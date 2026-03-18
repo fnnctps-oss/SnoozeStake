@@ -15,6 +15,7 @@ import { alarmApi } from '../services/api';
 import { Alarm } from '../types';
 import { Icon } from '../components/Icon';
 import { GradientBackground } from '../components/GradientBackground';
+import { scheduleAlarmNotifications, cancelAlarmNotifications } from '../services/notifications';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -108,9 +109,22 @@ export function AlarmListScreen({ navigation }: any) {
   }, []);
 
   const handleToggle = async (alarm: Alarm) => {
+    const newActive = !alarm.isEnabled;
     toggleAlarm(alarm.id);
     try {
       await alarmApi.toggle(alarm.id);
+      // Schedule or cancel notifications based on new state
+      if (newActive) {
+        await scheduleAlarmNotifications({
+          id: alarm.id,
+          label: alarm.label,
+          time: alarm.time,
+          daysOfWeek: alarm.daysOfWeek,
+          isActive: true,
+        });
+      } else {
+        await cancelAlarmNotifications(alarm.id);
+      }
     } catch {
       toggleAlarm(alarm.id);
     }
