@@ -28,6 +28,9 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { ReferralScreen } from '../screens/ReferralScreen';
 import { ShareCardScreen } from '../screens/ShareCardScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { CreateBattleScreen } from '../screens/CreateBattleScreen';
+import { BattleDetailScreen } from '../screens/BattleDetailScreen';
+import { GroupDetailScreen } from '../screens/GroupDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -76,6 +79,9 @@ function SocialStack() {
       <Stack.Screen name="Battles" component={BattleListScreen} options={{ title: 'Battles' }} />
       <Stack.Screen name="Groups" component={GroupListScreen} options={{ title: 'Groups' }} />
       <Stack.Screen name="Friends" component={FriendListScreen} options={{ title: 'Friends' }} />
+      <Stack.Screen name="CreateBattle" component={CreateBattleScreen} options={{ title: 'New Battle' }} />
+      <Stack.Screen name="BattleDetail" component={BattleDetailScreen} options={{ title: 'Battle' }} />
+      <Stack.Screen name="GroupDetail" component={GroupDetailScreen} options={{ title: 'Group' }} />
     </Stack.Navigator>
   );
 }

@@ -49,7 +49,7 @@ paymentRouter.post('/create-payment-intent', async (req: AuthRequest, res, next)
     // Create ephemeral key so Payment Sheet can show saved cards
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: stripeCustomerId },
-      { apiVersion: '2025-12-18.acacia' },
+      { apiVersion: '2025-02-24.acacia' },
     );
 
     // Create PaymentIntent (amount in cents)
