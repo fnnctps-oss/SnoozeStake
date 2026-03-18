@@ -26,7 +26,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // ─── Constants ──────────────────────────────────────────────
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const TASKS: { value: WakeUpTaskType; label: string; icon: string }[] = [
-  { value: 'NONE', label: 'None', icon: 'close-circle-outline' },
   { value: 'MATH', label: 'Math', icon: 'calculator-outline' },
   { value: 'SHAKE_PHONE', label: 'Shake', icon: 'phone-portrait-outline' },
   { value: 'TYPING_TEST', label: 'Typing', icon: 'text-outline' },
@@ -200,7 +199,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
     existingAlarm ? String(Number(existingAlarm.snoozeBasePenalty)) : '1'
   );
   const [escalating, setEscalating] = useState(existingAlarm?.useEscalatingPenalty || false);
-  const [taskType, setTaskType] = useState<WakeUpTaskType>(existingAlarm?.wakeUpTaskType || 'NONE');
+  const [taskType, setTaskType] = useState<WakeUpTaskType>(existingAlarm?.wakeUpTaskType === 'NONE' ? 'MATH' : (existingAlarm?.wakeUpTaskType || 'MATH'));
   const [difficulty, setDifficulty] = useState<TaskDifficulty>(existingAlarm?.wakeUpTaskDifficulty || 'EASY');
   const [destination, setDestination] = useState<PenaltyDestination>(existingAlarm?.penaltyDestination || 'SAVINGS');
   const [noEscape, setNoEscape] = useState(existingAlarm?.noEscapeMode || false);
@@ -613,24 +612,20 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         ))}
       </View>
 
-      {taskType !== 'NONE' && (
-        <>
-          <Text style={styles.sectionTitle}>Difficulty</Text>
-          <View style={styles.optionRow}>
-            {DIFFICULTIES.map((d) => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.optionButton, difficulty === d && styles.optionSelected]}
-                onPress={() => setDifficulty(d)}
-              >
-                <Text style={[styles.optionText, difficulty === d && styles.optionTextSelected]}>
-                  {d}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </>
-      )}
+      <Text style={styles.sectionTitle}>Difficulty</Text>
+      <View style={styles.optionRow}>
+        {DIFFICULTIES.map((d) => (
+          <TouchableOpacity
+            key={d}
+            style={[styles.optionButton, difficulty === d && styles.optionSelected]}
+            onPress={() => setDifficulty(d)}
+          >
+            <Text style={[styles.optionText, difficulty === d && styles.optionTextSelected]}>
+              {d}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* ─── No Escape Mode ─── */}
       <View style={[styles.switchRow, { marginTop: spacing.lg }]}>
