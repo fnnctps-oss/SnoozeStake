@@ -31,8 +31,8 @@ const TONE_FILES: Record<string, any> = {
 export function AlarmRingingScreen({ navigation, route }: any) {
   const alarm = route.params?.alarm;
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [snoozeCount, setSnoozeCount] = useState(0);
-  const [totalPenalty, setTotalPenalty] = useState(0);
+  const [snoozeCount, setSnoozeCount] = useState(route.params?.snoozeCount || 0);
+  const [totalPenalty, setTotalPenalty] = useState(route.params?.totalPenalty || 0);
   const [loading, setLoading] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
   const playerRef = useRef<AudioPlayer | null>(null);
@@ -126,6 +126,8 @@ export function AlarmRingingScreen({ navigation, route }: any) {
           data: {
             alarmId: alarm.id,
             type: 'alarm',
+            snoozeCount: newSnoozeCount,
+            totalPenalty: totalPenalty + penaltyAmount,
           },
         },
         trigger: {

@@ -179,9 +179,14 @@ export function AppNavigator() {
         const alarm = alarms.find((a) => a.id === data.alarmId);
         if (alarm && navigationRef.current) {
           // Navigate to AlarmRinging inside the Alarms tab
+          // Pass snoozeCount and totalPenalty from notification data (for re-snooze)
           navigationRef.current.navigate('AlarmsTab', {
             screen: 'AlarmRinging',
-            params: { alarm },
+            params: {
+              alarm,
+              snoozeCount: data.snoozeCount || 0,
+              totalPenalty: data.totalPenalty || 0,
+            },
           });
         }
       }
