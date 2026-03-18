@@ -92,14 +92,14 @@ export function DashboardScreen() {
           </GlassCard>
           <GlassCard style={styles.statCard}>
             <Icon name="trending-down-outline" size={20} color={colors.danger} />
-            <Text style={[styles.statValue, { color: colors.danger }]}>
+            <Text style={[styles.statValue, { color: colors.danger }]} numberOfLines={1} adjustsFontSizeToFit>
               ${(stats?.today?.totalPenalty || 0).toFixed(2)}
             </Text>
             <Text style={styles.statLabel}>Spent</Text>
           </GlassCard>
           <GlassCard style={styles.statCard}>
             <Icon name="trending-up-outline" size={20} color={colors.accent} />
-            <Text style={[styles.statValue, { color: colors.accent }]}>
+            <Text style={[styles.statValue, { color: colors.accent }]} numberOfLines={1} adjustsFontSizeToFit>
               ${(stats?.today?.moneySaved || 0).toFixed(2)}
             </Text>
             <Text style={styles.statLabel}>Saved</Text>
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statValue: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: '800',
     color: colors.text,
   },
