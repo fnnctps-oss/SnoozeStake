@@ -215,6 +215,4 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.border },
   walletLabel: { fontSize: fontSize.md, color: colors.textSecondary },
   walletValue: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
-
-  },
 });
