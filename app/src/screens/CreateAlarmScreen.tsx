@@ -32,11 +32,7 @@ const TASKS: { value: WakeUpTaskType; label: string; icon: string }[] = [
   { value: 'WALK_STEPS', label: 'Walk', icon: 'walk-outline' },
 ];
 const DIFFICULTIES: TaskDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
-const DESTINATIONS: { value: PenaltyDestination; label: string; icon: string }[] = [
-  { value: 'SAVINGS', label: 'My Savings', icon: 'wallet-outline' },
-  { value: 'CHARITY', label: 'Charity', icon: 'heart-outline' },
-  { value: 'FRIEND', label: 'A Friend', icon: 'person-outline' },
-];
+// Penalty always goes to platform (removed user-facing destination picker)
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1); // 1-12
 const MINUTES = Array.from({ length: 60 }, (_, i) => i); // 0-59
@@ -201,7 +197,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   const [escalating, setEscalating] = useState(existingAlarm?.useEscalatingPenalty || false);
   const [taskType, setTaskType] = useState<WakeUpTaskType>(existingAlarm?.wakeUpTaskType === 'NONE' ? 'MATH' : (existingAlarm?.wakeUpTaskType || 'MATH'));
   const [difficulty, setDifficulty] = useState<TaskDifficulty>(existingAlarm?.wakeUpTaskDifficulty || 'EASY');
-  const [destination, setDestination] = useState<PenaltyDestination>(existingAlarm?.penaltyDestination || 'SAVINGS');
+  // Destination hardcoded to SAVINGS (removed picker)
   const [noEscape, setNoEscape] = useState(existingAlarm?.noEscapeMode || false);
   const [snoozeDuration, setSnoozeDuration] = useState(existingAlarm?.snoozeDurationMinutes || 5);
   const [saving, setSaving] = useState(false);
@@ -341,7 +337,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       useEscalatingPenalty: escalating,
       wakeUpTaskType: taskType,
       wakeUpTaskDifficulty: difficulty,
-      penaltyDestination: destination,
+      penaltyDestination: 'SAVINGS',
       noEscapeMode: noEscape,
       snoozeDurationMinutes: snoozeDuration,
       soundUrl: selectedTone === 'custom' ? customToneUri : selectedTone,
@@ -569,28 +565,6 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         ))}
       </View>
 
-      {/* ─── Penalty Destination ─── */}
-      <Text style={styles.sectionTitle}>Penalty Goes To</Text>
-      <Text style={styles.splitInfo}>75% to destination, 25% platform fee</Text>
-      <View style={styles.optionRow}>
-        {DESTINATIONS.map((d) => (
-          <TouchableOpacity
-            key={d.value}
-            style={[styles.optionButton, destination === d.value && styles.optionSelected]}
-            onPress={() => setDestination(d.value)}
-          >
-            <Icon
-              name={d.icon}
-              size={18}
-              color={destination === d.value ? colors.text : colors.textSecondary}
-            />
-            <Text style={[styles.optionText, destination === d.value && styles.optionTextSelected]}>
-              {d.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {/* ─── Wake-Up Task ─── */}
       <Text style={styles.sectionTitle}>Wake-Up Task</Text>
       <View style={styles.optionGrid}>
@@ -729,11 +703,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
-  },
-  splitInfo: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
   },
 
   // Days
