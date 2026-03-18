@@ -46,11 +46,18 @@ paymentRouter.post('/create-payment-intent', async (req: AuthRequest, res, next)
       });
     }
 
+    // Create ephemeral key so Payment Sheet can show saved cards
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: stripeCustomerId },
+      { apiVersion: '2025-12-18.acacia' },
+    );
+
     // Create PaymentIntent (amount in cents)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: 'usd',
       customer: stripeCustomerId,
+      setup_future_usage: 'off_session', // saves the card for future payments
       metadata: {
         userId,
         type: 'wallet_topup',
@@ -61,6 +68,8 @@ paymentRouter.post('/create-payment-intent', async (req: AuthRequest, res, next)
     res.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      ephemeralKey: ephemeralKey.secret,
+      customerId: stripeCustomerId,
     });
   } catch (err) {
     next(err);

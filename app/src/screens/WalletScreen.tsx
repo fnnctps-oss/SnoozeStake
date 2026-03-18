@@ -77,9 +77,11 @@ export function WalletScreen({ navigation }: any) {
     const topUpAmount = amount || selectedAmount;
     setLoading(true);
     try {
-      const { clientSecret } = await paymentApi.createPaymentIntent(topUpAmount);
+      const { clientSecret, ephemeralKey, customerId } = await paymentApi.createPaymentIntent(topUpAmount);
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: clientSecret,
+        customerEphemeralKeySecret: ephemeralKey,
+        customerId,
         merchantDisplayName: 'SnoozeStake',
         style: 'alwaysDark',
         defaultBillingDetails: {},

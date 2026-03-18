@@ -137,7 +137,7 @@ export const feedApi = {
 export const paymentApi = {
   getConfig: () => request<{ publishableKey: string }>('/payments/config'),
   createPaymentIntent: (amount: number) =>
-    request<{ clientSecret: string; paymentIntentId: string }>('/payments/create-payment-intent', {
+    request<{ clientSecret: string; paymentIntentId: string; ephemeralKey: string; customerId: string }>('/payments/create-payment-intent', {
       method: 'POST',
       body: JSON.stringify({ amount }),
     }),
