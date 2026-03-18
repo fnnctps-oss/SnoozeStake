@@ -133,3 +133,15 @@ export const charityApi = {
 export const feedApi = {
   get: (page = 1) => request<{ feed: any[] }>(`/feed?page=${page}`),
 };
+
+export const paymentApi = {
+  getConfig: () => request<{ publishableKey: string }>('/payments/config'),
+  createPaymentIntent: (amount: number) =>
+    request<{ clientSecret: string; paymentIntentId: string }>('/payments/create-payment-intent', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    }),
+  getWallet: () =>
+    request<{ walletBalance: string; totalSnoozed: string; totalSaved: string }>('/payments/wallet'),
+  getHistory: () => request<{ transactions: any[] }>('/payments/history'),
+};

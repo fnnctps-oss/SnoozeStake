@@ -17,6 +17,8 @@ import { feedRouter } from './routes/feed';
 import { sharingRouter } from './routes/sharing';
 import { referralRouter } from './routes/referral';
 import { notificationRouter } from './routes/notifications';
+import { paymentRouter } from './routes/payments';
+import { webhookRouter } from './routes/webhook';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSnoozeAlerts } from './websocket/snoozeAlerts';
 import { resolveBattles } from './jobs/battleResolution';
@@ -31,6 +33,10 @@ const io = new SocketIOServer(httpServer, {
 
 app.use(helmet());
 app.use(cors());
+
+// Stripe webhook needs raw body — must be BEFORE express.json()
+app.use('/api/webhook', express.raw({ type: 'application/json' }), webhookRouter);
+
 app.use(express.json());
 
 // Routes
@@ -47,6 +53,7 @@ app.use('/api/feed', feedRouter);
 app.use('/api/share', sharingRouter);
 app.use('/api/referral', referralRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/payments', paymentRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {

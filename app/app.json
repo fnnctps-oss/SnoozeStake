@@ -36,7 +36,14 @@
     },
     "plugins": [
       "expo-sharing",
-      "expo-audio"
+      "expo-audio",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.snoozestake",
+          "enableGooglePay": false
+        }
+      ]
     ]
   }
 }
