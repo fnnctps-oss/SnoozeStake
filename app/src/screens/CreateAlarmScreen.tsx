@@ -560,18 +560,23 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 
       {/* ─── Snooze Duration ─── */}
       <Text style={styles.sectionTitle}>Snooze Duration</Text>
-      <View style={styles.optionRow}>
-        {[1, 2, 3, 5, 10].map((mins) => (
-          <TouchableOpacity
-            key={mins}
-            style={[styles.optionButton, snoozeDuration === mins && styles.optionSelected]}
-            onPress={() => setSnoozeDuration(mins)}
-          >
-            <Text style={[styles.optionText, snoozeDuration === mins && styles.optionTextSelected]}>
-              {mins} min
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.penaltyRow}>
+        <TextInput
+          style={styles.penaltyInput}
+          value={String(snoozeDuration)}
+          onChangeText={(text) => {
+            const cleaned = text.replace(/[^0-9]/g, '');
+            setSnoozeDuration(cleaned ? parseInt(cleaned, 10) : 0);
+          }}
+          onBlur={() => {
+            if (snoozeDuration < 1) setSnoozeDuration(1);
+            if (snoozeDuration > 30) setSnoozeDuration(30);
+          }}
+          keyboardType="number-pad"
+          placeholder="5"
+          placeholderTextColor={colors.textMuted}
+        />
+        <Text style={styles.perSnooze}>minutes (1–30)</Text>
       </View>
 
       {/* ─── Wake-Up Task ─── */}
