@@ -44,18 +44,37 @@ statsRouter.get('/dashboard', async (req: AuthRequest, res, next) => {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
 
-    const weeklySnoozes = await prisma.snoozeEvent.findMany({
-      where: { userId: req.userId!, snoozedAt: { gte: weekStart } },
-      orderBy: { snoozedAt: 'asc' },
-    });
+    const [weeklySnoozes, weeklyWakes] = await Promise.all([
+      prisma.snoozeEvent.findMany({
+        where: { userId: req.userId!, snoozedAt: { gte: weekStart } },
+        orderBy: { snoozedAt: 'asc' },
+      }),
+      prisma.wakeUpEvent.findMany({
+        where: { userId: req.userId!, wokeUpAt: { gte: weekStart } },
+        orderBy: { wokeUpAt: 'asc' },
+      }),
+    ]);
 
-    // Group by day
-    const dailyStats: Record<string, { snoozeCount: number; penalty: number }> = {};
+    // Group by day — include all 7 days even if empty
+    const dailyStats: Record<string, { snoozeCount: number; penalty: number; saved: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyStats[key] = { snoozeCount: 0, penalty: 0, saved: 0 };
+    }
     weeklySnoozes.forEach((s) => {
       const day = s.snoozedAt.toISOString().split('T')[0];
-      if (!dailyStats[day]) dailyStats[day] = { snoozeCount: 0, penalty: 0 };
-      dailyStats[day].snoozeCount++;
-      dailyStats[day].penalty += Number(s.penaltyAmount);
+      if (dailyStats[day]) {
+        dailyStats[day].snoozeCount++;
+        dailyStats[day].penalty += Number(s.penaltyAmount);
+      }
+    });
+    weeklyWakes.forEach((w) => {
+      const day = w.wokeUpAt.toISOString().split('T')[0];
+      if (dailyStats[day]) {
+        dailyStats[day].saved += Number(w.moneySaved);
+      }
     });
 
     res.json({
