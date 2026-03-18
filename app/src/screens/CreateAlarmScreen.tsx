@@ -523,18 +523,26 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 
       {/* ─── Penalty ─── */}
       <Text style={styles.sectionTitle}>Snooze Penalty</Text>
-      <View style={styles.optionRow}>
-        {[1, 2, 5, 10, 20].map((amt) => (
-          <TouchableOpacity
-            key={amt}
-            style={[styles.optionButton, parseFloat(penalty) === amt && styles.optionSelected]}
-            onPress={() => setPenalty(String(amt))}
-          >
-            <Text style={[styles.optionText, parseFloat(penalty) === amt && styles.optionTextSelected]}>
-              ${amt}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.penaltyRow}>
+        <Text style={styles.dollarSign}>$</Text>
+        <TextInput
+          style={styles.penaltyInput}
+          value={penalty}
+          onChangeText={(text) => {
+            // Only allow numbers and one decimal point
+            const cleaned = text.replace(/[^0-9.]/g, '');
+            setPenalty(cleaned);
+          }}
+          onBlur={() => {
+            // Enforce $1 minimum when user leaves the field
+            const val = parseFloat(penalty);
+            if (isNaN(val) || val < 1) setPenalty('1');
+          }}
+          keyboardType="decimal-pad"
+          placeholder="1.00"
+          placeholderTextColor={colors.textMuted}
+        />
+        <Text style={styles.perSnooze}>per snooze (min $1)</Text>
       </View>
 
       <View style={styles.switchRow}>
