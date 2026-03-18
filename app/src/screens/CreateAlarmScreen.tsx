@@ -523,17 +523,18 @@ export function CreateAlarmScreen({ navigation, route }: any) {
 
       {/* ─── Penalty ─── */}
       <Text style={styles.sectionTitle}>Snooze Penalty</Text>
-      <View style={styles.penaltyRow}>
-        <Text style={styles.dollarSign}>$</Text>
-        <TextInput
-          style={styles.penaltyInput}
-          value={penalty}
-          onChangeText={setPenalty}
-          keyboardType="decimal-pad"
-          placeholder="1.00"
-          placeholderTextColor={colors.textMuted}
-        />
-        <Text style={styles.perSnooze}>per snooze</Text>
+      <View style={styles.optionRow}>
+        {[1, 2, 5, 10, 20].map((amt) => (
+          <TouchableOpacity
+            key={amt}
+            style={[styles.optionButton, parseFloat(penalty) === amt && styles.optionSelected]}
+            onPress={() => setPenalty(String(amt))}
+          >
+            <Text style={[styles.optionText, parseFloat(penalty) === amt && styles.optionTextSelected]}>
+              ${amt}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <View style={styles.switchRow}>
