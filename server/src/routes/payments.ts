@@ -81,6 +81,88 @@ paymentRouter.get('/history', async (req: AuthRequest, res, next) => {
   }
 });
 
+// POST /api/payments/withdraw — Withdraw funds back to original card
+const withdrawSchema = z.object({
+  amount: z.number().min(1).max(500), // $1 – $500
+});
+
+const WITHDRAWAL_FEE = 0.50; // flat $0.50 processing fee
+
+paymentRouter.post('/withdraw', async (req: AuthRequest, res, next) => {
+  try {
+    const { amount } = withdrawSchema.parse(req.body);
+    const userId = req.userId!;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new AppError(404, 'User not found');
+
+    const totalDeducted = amount + WITHDRAWAL_FEE;
+    const balance = Number(user.walletBalance);
+
+    if (balance < totalDeducted) {
+      throw new AppError(400, `Insufficient balance. You need $${totalDeducted.toFixed(2)} ($${amount.toFixed(2)} + $${WITHDRAWAL_FEE.toFixed(2)} fee) but only have $${balance.toFixed(2)}.`);
+    }
+
+    // Find the most recent successful top-up transaction with a Stripe PaymentIntent
+    const topUpTx = await prisma.transaction.findFirst({
+      where: {
+        userId,
+        type: 'WALLET_TOPUP',
+        status: 'COMPLETED',
+        stripePaymentIntentId: { not: null },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!topUpTx || !topUpTx.stripePaymentIntentId) {
+      throw new AppError(400, 'No refundable payment found. You can only withdraw to the card you originally topped up with.');
+    }
+
+    // Create Stripe refund (amount in cents)
+    const refund = await stripe.refunds.create({
+      payment_intent: topUpTx.stripePaymentIntentId,
+      amount: Math.round(amount * 100), // refund the withdrawal amount (fee kept by platform)
+      metadata: {
+        userId,
+        type: 'wallet_withdrawal',
+      },
+    });
+
+    // Deduct from wallet and create transaction record atomically
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          walletBalance: { decrement: totalDeducted },
+        },
+      }),
+      prisma.transaction.create({
+        data: {
+          userId,
+          type: 'SAVINGS_WITHDRAWAL',
+          amount: new Decimal(amount),
+          platformFee: new Decimal(WITHDRAWAL_FEE),
+          stripePaymentIntentId: refund.id,
+          status: 'COMPLETED',
+          description: `Withdrawal of $${amount.toFixed(2)} to card (fee: $${WITHDRAWAL_FEE.toFixed(2)})`,
+        },
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      amount,
+      fee: WITHDRAWAL_FEE,
+      netRefund: amount,
+      totalDeducted,
+      newBalance: balance - totalDeducted,
+      refundId: refund.id,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/payments/wallet — Get wallet balance
 paymentRouter.get('/wallet', async (req: AuthRequest, res, next) => {
   try {

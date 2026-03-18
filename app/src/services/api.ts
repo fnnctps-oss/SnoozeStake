@@ -144,4 +144,17 @@ export const paymentApi = {
   getWallet: () =>
     request<{ walletBalance: string; totalSnoozed: string; totalSaved: string }>('/payments/wallet'),
   getHistory: () => request<{ transactions: any[] }>('/payments/history'),
+  withdraw: (amount: number) =>
+    request<{
+      success: boolean;
+      amount: number;
+      fee: number;
+      netRefund: number;
+      totalDeducted: number;
+      newBalance: number;
+      refundId: string;
+    }>('/payments/withdraw', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    }),
 };

@@ -68,6 +68,15 @@ webhookRouter.post('/stripe', async (req: Request, res: Response) => {
       break;
     }
 
+    case 'charge.refunded': {
+      const charge = event.data.object as Stripe.Charge;
+      const refundUserId = charge.metadata?.userId;
+      if (refundUserId) {
+        console.log(`💸 Refund confirmed for user ${refundUserId}, charge ${charge.id}`);
+      }
+      break;
+    }
+
     case 'payment_intent.payment_failed': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log(`❌ Payment failed: ${paymentIntent.id}`);
