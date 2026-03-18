@@ -333,7 +333,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       label: label.trim(),
       time: to24h(),
       daysOfWeek: selectedDays,
-      snoozeBasePenalty: parseFloat(penalty) || 1,
+      snoozeBasePenalty: Math.max(1, parseFloat(penalty) || 1),
       useEscalatingPenalty: escalating,
       wakeUpTaskType: taskType,
       wakeUpTaskDifficulty: difficulty,

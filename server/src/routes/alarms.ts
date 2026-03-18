@@ -13,7 +13,7 @@ const createAlarmSchema = z.object({
   label: z.string().min(1).max(100),
   time: z.string().regex(/^\d{2}:\d{2}$/),
   daysOfWeek: z.array(z.number().min(0).max(6)),
-  snoozeBasePenalty: z.number().min(0.25).max(100).optional(),
+  snoozeBasePenalty: z.number().min(1).max(100).optional(),
   useEscalatingPenalty: z.boolean().optional(),
   maxSnoozes: z.number().min(1).max(10).optional(),
   snoozeDurationMinutes: z.number().min(1).max(30).optional(),
