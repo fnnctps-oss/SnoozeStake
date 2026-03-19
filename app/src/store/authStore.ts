@@ -22,6 +22,7 @@ const MOCK_USER: User = {
   totalSnoozed: 12.50,
   totalSaved: 42.00,
   referralCode: 'DEMO2026',
+  timezone: 'America/Chicago',
   createdAt: new Date().toISOString(),
 };
 

@@ -37,7 +37,7 @@ export function ReferralScreen() {
       {/* Code Card */}
       <View style={styles.codeCard}>
         <Text style={styles.codeLabel}>Your Referral Code</Text>
-        <Text style={styles.codeValue}>{user?.referralCode}</Text>
+        <Text style={styles.codeValue} numberOfLines={1} adjustsFontSizeToFit>{user?.referralCode}</Text>
         <TouchableOpacity style={styles.copyButton} onPress={copyCode}>
           <Text style={styles.copyText}>Copy Code</Text>
         </TouchableOpacity>
@@ -92,10 +92,10 @@ const styles = StyleSheet.create({
   },
   codeLabel: { fontSize: fontSize.sm, color: colors.primaryLight, fontWeight: '600' },
   codeValue: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: '800',
     color: colors.text,
-    letterSpacing: 6,
+    letterSpacing: 4,
     marginVertical: spacing.md,
   },
   copyButton: {

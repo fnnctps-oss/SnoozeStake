@@ -41,17 +41,17 @@ export function ProfileScreen({ navigation }: any) {
         {/* Stats Summary */}
         <View style={styles.statsRow}>
           <GlassCard style={styles.statItem}>
-            <Text style={styles.statValue}>{user?.currentStreak || 0}</Text>
+            <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{user?.currentStreak || 0}</Text>
             <Text style={styles.statLabel}>Streak</Text>
           </GlassCard>
           <GlassCard style={styles.statItem}>
-            <Text style={[styles.statValue, { color: colors.danger }]}>
+            <Text style={[styles.statValue, { color: colors.danger }]} numberOfLines={1} adjustsFontSizeToFit>
               ${Number(user?.totalSnoozed || 0).toFixed(2)}
             </Text>
             <Text style={styles.statLabel}>Snoozed</Text>
           </GlassCard>
           <GlassCard style={styles.statItem}>
-            <Text style={[styles.statValue, { color: colors.accent }]}>
+            <Text style={[styles.statValue, { color: colors.accent }]} numberOfLines={1} adjustsFontSizeToFit>
               ${Number(user?.totalSaved || 0).toFixed(2)}
             </Text>
             <Text style={styles.statLabel}>Saved</Text>
@@ -82,7 +82,7 @@ export function ProfileScreen({ navigation }: any) {
             <GlassCard style={styles.menuItem}>
               <IconBubble name="git-network-outline" size={20} color={colors.primaryLight} bgColor="rgba(108, 60, 225, 0.13)" />
               <Text style={styles.menuText}>Referral Code</Text>
-              <Text style={styles.menuValue}>{user?.referralCode}</Text>
+              <Text style={styles.menuValue} numberOfLines={1}>{user?.referralCode}</Text>
             </GlassCard>
           </TouchableOpacity>
 
