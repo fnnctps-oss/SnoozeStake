@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
+  SafeAreaView,
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { charityApi } from '../services/api';
@@ -46,69 +47,94 @@ export function CharityScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Impact Summary */}
-      {impact && (
-        <View style={styles.impactCard}>
-          <Icon name="heart-outline" size={32} color={colors.accent} />
-          <Text style={styles.impactTitle}>Your Charity Impact</Text>
-          <Text style={styles.impactAmount}>
-            ${impact.totalDonated?.toFixed(2) || '0.00'}
-          </Text>
-          <Text style={styles.impactSubtext}>
-            donated from {impact.totalDonations || 0} snoozes
-          </Text>
-        </View>
-      )}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.screenTitle}>Charity</Text>
 
-      <Text style={styles.sectionTitle}>Charities</Text>
-      <FlatList
-        data={charities}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
-        renderItem={({ item }) => {
-          const iconInfo = CATEGORY_ICONS[item.category] || { name: 'heart-outline', color: colors.primaryLight };
-          return (
-            <TouchableOpacity style={styles.charityCard}>
-              <IconBubble
-                name={iconInfo.name}
-                size={24}
-                color={iconInfo.color}
-                bgColor={iconInfo.color + '20'}
-                bubbleSize={48}
-              />
-              <View style={styles.charityInfo}>
-                <Text style={styles.charityName}>{item.name}</Text>
-                <Text style={styles.charityCategory}>{item.category}</Text>
-                <Text style={styles.charityDesc} numberOfLines={2}>
-                  {item.description}
-                </Text>
+        {/* Impact Summary */}
+        {impact && (
+          <View style={styles.impactCard}>
+            <View style={styles.impactIconBubble}>
+              <Icon name="heart" size={28} color={colors.accent} />
+            </View>
+            <Text style={styles.impactTitle}>Your Charity Impact</Text>
+            <Text style={styles.impactAmount}>
+              ${impact.totalDonated?.toFixed(2) || '0.00'}
+            </Text>
+            <Text style={styles.impactSubtext}>
+              donated from {impact.totalDonations || 0} snoozes
+            </Text>
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Charities</Text>
+        <FlatList
+          data={charities}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          renderItem={({ item }) => {
+            const iconInfo = CATEGORY_ICONS[item.category] || { name: 'heart-outline', color: colors.primaryLight };
+            return (
+              <TouchableOpacity style={styles.charityCard} activeOpacity={0.7}>
+                <View style={[styles.charityIconBubble, { backgroundColor: iconInfo.color + '18' }]}>
+                  <Icon name={iconInfo.name} size={24} color={iconInfo.color} />
+                </View>
+                <View style={styles.charityInfo}>
+                  <Text style={styles.charityName}>{item.name}</Text>
+                  <View style={styles.categoryPill}>
+                    <Text style={[styles.charityCategory, { color: iconInfo.color }]}>{item.category}</Text>
+                  </View>
+                  <Text style={styles.charityDesc} numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconBubble}>
+                <Icon name="heart-outline" size={32} color={colors.primary} />
               </View>
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No charities available</Text>
-        }
-      />
-    </View>
+              <Text style={styles.emptyText}>No charities available</Text>
+            </View>
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, backgroundColor: colors.background, padding: spacing.md },
+  screenTitle: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
   impactCard: {
-    backgroundColor: colors.accent + '15',
-    borderRadius: borderRadius.xl,
+    backgroundColor: colors.glass,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.20)',
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.accent + '30',
     gap: spacing.xs,
+  },
+  impactIconBubble: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0, 230, 118, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
   impactTitle: { fontSize: fontSize.sm, color: colors.accent, fontWeight: '600' },
   impactAmount: { fontSize: fontSize.hero, fontWeight: '800', color: colors.accent },
@@ -122,15 +148,42 @@ const styles = StyleSheet.create({
   list: { gap: spacing.sm, paddingBottom: 40 },
   charityCard: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    backgroundColor: colors.glass,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    padding: spacing.lg,
     gap: spacing.md,
+    alignItems: 'flex-start',
+  },
+  charityIconBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   charityInfo: { flex: 1 },
   charityName: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
-  charityCategory: { fontSize: fontSize.xs, color: colors.primaryLight, marginTop: 2 },
-  charityDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 4 },
-  emptyText: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl },
+  categoryPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  charityCategory: { fontSize: fontSize.xs, fontWeight: '600' },
+  charityDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 6, lineHeight: 17 },
+  emptyState: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
+  emptyIconBubble: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(108, 60, 225, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  emptyText: { color: colors.textMuted, fontSize: fontSize.sm },
 });
