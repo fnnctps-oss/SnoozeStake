@@ -1,8 +1,12 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon } from '../components/Icon';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const GLASS_BG = 'rgba(108, 60, 225, 0.08)';
+const GLASS_BORDER = 'rgba(108, 60, 225, 0.2)';
 
 interface Achievement {
   id: string;
@@ -66,94 +70,139 @@ export function AchievementsScreen() {
   const unlockedCount = ACHIEVEMENTS.filter((a) => a.check(user)).length;
 
   return (
-    <View style={styles.container}>
-      {/* Level Card */}
-      <View style={styles.levelCard}>
-        <Icon name={currentLevel.iconName} size={48} color={currentLevel.iconColor} />
-        <Text style={styles.levelName}>{currentLevel.name}</Text>
-        <Text style={styles.xpText}>{xp} XP</Text>
-        {nextLevel && (
-          <>
-            <View style={styles.xpBar}>
-              <View style={[styles.xpBarFill, { width: `${progress * 100}%` }]} />
-            </View>
-            <Text style={styles.nextLevel}>
-              {nextLevel.minXp - xp} XP to {nextLevel.name}
-            </Text>
-          </>
-        )}
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.screenTitle}>Achievements</Text>
 
-      <Text style={styles.sectionTitle}>
-        Achievements ({unlockedCount}/{ACHIEVEMENTS.length})
-      </Text>
-
-      <FlatList
-        data={ACHIEVEMENTS}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.gridRow}
-        renderItem={({ item }) => {
-          const unlocked = item.check(user);
-          return (
-            <View style={[styles.badgeCard, !unlocked && styles.badgeLocked]}>
-              <View style={[styles.badgeIconWrap, { backgroundColor: (unlocked ? item.iconColor : colors.textMuted) + '20' }]}>
-                <Icon
-                  name={item.iconName}
-                  size={28}
-                  color={unlocked ? item.iconColor : colors.textMuted}
+        {/* Level Card */}
+        <View style={styles.levelCard}>
+          <View style={styles.levelBadge}>
+            <Icon name={currentLevel.iconName} size={40} color={currentLevel.iconColor} />
+          </View>
+          <Text style={styles.levelName}>{currentLevel.name}</Text>
+          <Text style={styles.xpText}>{xp} XP</Text>
+          {nextLevel && (
+            <>
+              <View style={styles.xpBarOuter}>
+                <LinearGradient
+                  colors={['#6C3CE1', '#8B5CF6', '#A78BFA']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.xpBarFill, { width: `${Math.max(progress * 100, 2)}%` }]}
                 />
               </View>
-              <Text style={[styles.badgeTitle, !unlocked && styles.badgeTitleLocked]}>
-                {item.title}
+              <Text style={styles.nextLevel}>
+                {nextLevel.minXp - xp} XP to {nextLevel.name}
               </Text>
-              <Text style={styles.badgeDesc}>{item.description}</Text>
-              {unlocked && (
-                <View style={styles.unlockedRow}>
-                  <Icon name="checkmark-circle" size={14} color={colors.accent} />
-                  <Text style={styles.unlockedBadge}>Unlocked</Text>
+            </>
+          )}
+        </View>
+
+        <Text style={styles.sectionTitle}>
+          Achievements ({unlockedCount}/{ACHIEVEMENTS.length})
+        </Text>
+
+        <FlatList
+          data={ACHIEVEMENTS}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.gridRow}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => {
+            const unlocked = item.check(user);
+            return (
+              <View style={[styles.badgeCard, !unlocked && styles.badgeLocked]}>
+                <View style={[styles.badgeIconWrap, { backgroundColor: (unlocked ? item.iconColor : colors.textMuted) + '20' }]}>
+                  <Icon
+                    name={item.iconName}
+                    size={28}
+                    color={unlocked ? item.iconColor : colors.textMuted}
+                  />
                 </View>
-              )}
-            </View>
-          );
-        }}
-      />
-    </View>
+                <Text style={[styles.badgeTitle, !unlocked && styles.badgeTitleLocked]}>
+                  {item.title}
+                </Text>
+                <Text style={styles.badgeDesc}>{item.description}</Text>
+                {unlocked && (
+                  <View style={styles.unlockedRow}>
+                    <Icon name="checkmark-circle" size={14} color={colors.accent} />
+                    <Text style={styles.unlockedBadge}>Unlocked</Text>
+                  </View>
+                )}
+              </View>
+            );
+          }}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.md },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#050510',
+  },
+  container: { flex: 1, backgroundColor: 'transparent', padding: spacing.lg },
+  screenTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: spacing.lg,
+  },
   levelCard: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: GLASS_BG,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.primary + '40',
+    borderColor: GLASS_BORDER,
     gap: spacing.xs,
+  },
+  levelBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(108, 60, 225, 0.15)',
+    borderWidth: 2,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
   levelName: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text },
   xpText: { fontSize: fontSize.md, color: colors.primaryLight, fontWeight: '600' },
-  xpBar: {
+  xpBarOuter: {
     width: '100%',
-    height: 8,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 5,
     overflow: 'hidden',
     marginTop: spacing.sm,
   },
-  xpBarFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 4 },
+  xpBarFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
   nextLevel: { fontSize: fontSize.xs, color: colors.textSecondary },
-  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
+  sectionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   grid: { gap: spacing.sm, paddingBottom: 40 },
   gridRow: { gap: spacing.sm },
   badgeCard: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    borderRadius: borderRadius.xl,
     padding: spacing.md,
     alignItems: 'center',
     gap: 4,
