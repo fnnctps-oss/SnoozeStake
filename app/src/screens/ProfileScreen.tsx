@@ -6,21 +6,12 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-  SafeAreaView,
 } from 'react-native';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAuthStore } from '../store/authStore';
 import { Icon, IconBubble } from '../components/Icon';
 import { GradientBackground } from '../components/GradientBackground';
 import { GlassCard } from '../components/GlassCard';
-import { GlowAvatar } from '../components/GlowAvatar';
-
-const MENU_ITEMS = [
-  { label: 'Account', icon: 'person', color: '#3478F6', navigateTo: 'Settings' },
-  { label: 'Notifications', icon: 'notifications', color: '#AF52DE', navigateTo: 'Settings' },
-  { label: 'Payment Methods', icon: 'card', color: '#5856D6', navigateTo: 'Wallet' },
-  { label: 'Security', icon: 'shield-checkmark', color: '#32ADE6', navigateTo: 'Settings' },
-];
 
 export function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuthStore();
@@ -34,126 +25,187 @@ export function ProfileScreen({ navigation }: any) {
 
   return (
     <GradientBackground>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.screenTitle}>Profile</Text>
-
-        <View style={styles.avatarSection}>
-          <GlowAvatar name={user?.displayName} size={120} />
-          <Text style={styles.displayName}>{user?.displayName || 'User'}</Text>
-          {user?.email ? (
-            <Text style={styles.email}>{user.email}</Text>
-          ) : null}
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Profile Header */}
+        <View style={styles.header}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.displayName?.charAt(0)?.toUpperCase() || '?'}
+            </Text>
+          </View>
+          <Text style={styles.name}>{user?.displayName}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+          <Text style={styles.level}>Beginner</Text>
         </View>
 
-        <GlassCard style={styles.menuCard}>
-          {MENU_ITEMS.map((item, index) => (
-            <React.Fragment key={item.label}>
-              <TouchableOpacity
-                style={styles.menuRow}
-                activeOpacity={0.6}
-                onPress={() => navigation.navigate(item.navigateTo)}
-              >
-                <IconBubble
-                  name={item.icon}
-                  size={20}
-                  color="#FFFFFF"
-                  bgColor={item.color}
-                  bubbleSize={36}
-                />
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <Icon name="chevron-forward" size={20} color={colors.textMuted} />
-              </TouchableOpacity>
-              {index < MENU_ITEMS.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </GlassCard>
+        {/* Stats Summary */}
+        <View style={styles.statsRow}>
+          <GlassCard style={styles.statItem}>
+            <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{user?.currentStreak || 0}</Text>
+            <Text style={styles.statLabel}>Streak</Text>
+          </GlassCard>
+          <GlassCard style={styles.statItem}>
+            <Text style={[styles.statValue, { color: colors.danger }]} numberOfLines={1} adjustsFontSizeToFit>
+              ${Number(user?.totalSnoozed || 0).toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Snoozed</Text>
+          </GlassCard>
+          <GlassCard style={styles.statItem}>
+            <Text style={[styles.statValue, { color: colors.accent }]} numberOfLines={1} adjustsFontSizeToFit>
+              ${Number(user?.totalSaved || 0).toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Saved</Text>
+          </GlassCard>
+        </View>
 
-        <TouchableOpacity
-          style={styles.logoutButton}
-          activeOpacity={0.7}
-          onPress={handleLogout}
-        >
-          <Icon name="log-out-outline" size={20} color={colors.danger} />
+        {/* Menu Items */}
+        <View style={styles.menu}>
+          <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
+            <GlassCard style={styles.menuItem}>
+              <IconBubble name="wallet-outline" size={20} color={colors.accent} bgColor="rgba(0, 230, 118, 0.13)" />
+              <Text style={styles.menuText}>Wallet</Text>
+              <Text style={styles.menuValue}>
+                ${Number(user?.walletBalance || 0).toFixed(2)}
+              </Text>
+            </GlassCard>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Achievements')}>
+            <GlassCard style={styles.menuItem}>
+              <IconBubble name="trophy-outline" size={20} color={colors.warning} bgColor="rgba(255, 176, 32, 0.13)" />
+              <Text style={styles.menuText}>Achievements</Text>
+              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+            </GlassCard>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Referral')}>
+            <GlassCard style={styles.menuItem}>
+              <IconBubble name="git-network-outline" size={20} color={colors.primaryLight} bgColor="rgba(108, 60, 225, 0.13)" />
+              <Text style={styles.menuText}>Referral Code</Text>
+              <Text style={styles.menuValue} numberOfLines={1}>{user?.referralCode}</Text>
+            </GlassCard>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('ShareCard')}>
+            <GlassCard style={styles.menuItem}>
+              <IconBubble name="share-social-outline" size={20} color="#FF9F43" bgColor="rgba(255, 159, 67, 0.13)" />
+              <Text style={styles.menuText}>Share Card</Text>
+              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+            </GlassCard>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+            <GlassCard style={styles.menuItem}>
+              <IconBubble name="settings-outline" size={20} color={colors.textSecondary} bgColor={colors.surfaceLight} />
+              <Text style={styles.menuText}>Settings</Text>
+              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+            </GlassCard>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Icon name="log-out-outline" size={18} color={colors.danger} />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-
-        <View style={{ height: spacing.xl }} />
       </ScrollView>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: 60,
-    paddingBottom: 100,
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
+  container: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: 40, paddingTop: spacing.lg },
+  header: {
+    alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  avatarSection: {
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary,
     alignItems: 'center',
-    marginBottom: spacing.xl + spacing.md,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
-  displayName: {
+  avatarText: {
+    fontSize: fontSize.xxl,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  name: {
     fontSize: fontSize.xl,
     fontWeight: '700',
     color: colors.text,
-    marginTop: spacing.md,
   },
   email: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
-  menuCard: {
-    padding: spacing.sm,
+  level: {
+    fontSize: fontSize.sm,
+    color: colors.primaryLight,
+    fontWeight: '600',
+    marginTop: spacing.xs,
+    backgroundColor: 'rgba(108, 60, 225, 0.19)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     marginBottom: spacing.xl,
   },
-  menuRow: {
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: fontSize.xl,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  statLabel: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  menu: {
+    gap: spacing.sm,
+  },
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    gap: spacing.md,
   },
-  menuLabel: {
+  menuText: {
     flex: 1,
     fontSize: fontSize.md,
-    fontWeight: '500',
     color: colors.text,
-    marginLeft: spacing.md,
+    fontWeight: '600',
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    marginHorizontal: spacing.md,
+  menuValue: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   logoutButton: {
-    flexDirection: 'row',
+    marginTop: spacing.xl,
+    padding: spacing.md,
     alignItems: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.md + 2,
-    borderRadius: borderRadius.lg,
-    backgroundColor: 'rgba(255, 107, 107, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 107, 0.2)',
   },
   logoutText: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
     color: colors.danger,
+    fontWeight: '600',
+    fontSize: fontSize.md,
   },
 });

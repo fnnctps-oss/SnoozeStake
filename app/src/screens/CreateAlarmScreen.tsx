@@ -9,7 +9,6 @@ import {
   Alert,
   Switch,
   Dimensions,
-  SafeAreaView,
 } from 'react-native';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import type { AudioPlayer } from 'expo-audio';
@@ -20,6 +19,7 @@ import { alarmApi } from '../services/api';
 import { WakeUpTaskType, TaskDifficulty, PenaltyDestination } from '../types';
 import { Icon } from '../components/Icon';
 import { scheduleAlarmNotifications, cancelAlarmNotifications, requestNotificationPermissions } from '../services/notifications';
+import { GradientBackground } from '../components/GradientBackground';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -53,17 +53,13 @@ const BUILTIN_TONES = [
   { id: 'buzzer', name: 'Buzzer', icon: 'volume-high-outline', file: require('../../assets/tones/buzzer.wav') },
 ];
 
-// ─── Glass card style constants ─────────────────────────────
-const GLASS_BG = 'rgba(108, 60, 225, 0.08)';
-const GLASS_BORDER = 'rgba(108, 60, 225, 0.2)';
-
 // ─── Scroll Picker Component (uses ScrollView to avoid VirtualizedList nesting warning) ───
 function ScrollPicker({
   data,
   selectedValue,
   onValueChange,
   formatLabel,
-  width: pickerWidth = 90,
+  width: pickerWidth = 80,
 }: {
   data: number[];
   selectedValue: number;
@@ -137,9 +133,9 @@ const pickerStyles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     borderRadius: borderRadius.lg,
-    backgroundColor: GLASS_BG,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   highlight: {
     position: 'absolute',
@@ -147,7 +143,7 @@ const pickerStyles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    backgroundColor: 'rgba(108, 60, 225, 0.25)',
+    backgroundColor: 'rgba(108, 60, 225, 0.2)',
     borderRadius: borderRadius.md,
     zIndex: 1,
     pointerEvents: 'none',
@@ -162,7 +158,7 @@ const pickerStyles = StyleSheet.create({
     color: colors.textMuted,
   },
   itemTextSelected: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     color: colors.text,
   },
@@ -402,336 +398,269 @@ export function CreateAlarmScreen({ navigation, route }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.screenTitle}>{existingAlarm ? 'Edit Alarm' : 'New Alarm'}</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* ─── Time Picker ─── */}
-        <View style={styles.glassCard}>
-          <View style={styles.pickerRow}>
-            <ScrollPicker
-              data={HOURS}
-              selectedValue={hour}
-              onValueChange={setHour}
-              formatLabel={(v) => v.toString()}
-              width={90}
-            />
-            <Text style={styles.timeSeparator}>:</Text>
-            <ScrollPicker
-              data={MINUTES}
-              selectedValue={minute}
-              onValueChange={setMinute}
-              formatLabel={(v) => v.toString().padStart(2, '0')}
-              width={90}
-            />
-            <View style={styles.ampmContainer}>
-              <TouchableOpacity
-                style={[styles.ampmButton, period === 'AM' && styles.ampmActive]}
-                onPress={() => setPeriod('AM')}
-              >
-                <Text style={[styles.ampmText, period === 'AM' && styles.ampmTextActive]}>AM</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.ampmButton, period === 'PM' && styles.ampmActive]}
-                onPress={() => setPeriod('PM')}
-              >
-                <Text style={[styles.ampmText, period === 'PM' && styles.ampmTextActive]}>PM</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* ─── Label ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Label</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Alarm Label (e.g. Wake up for gym)"
-            placeholderTextColor={colors.textMuted}
-            value={label}
-            onChangeText={setLabel}
+    <GradientBackground>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* ─── Time Picker ─── */}
+      <View style={styles.timeSection}>
+        <View style={styles.pickerRow}>
+          <ScrollPicker
+            data={HOURS}
+            selectedValue={hour}
+            onValueChange={setHour}
+            formatLabel={(v) => v.toString()}
+            width={85}
           />
-        </View>
-
-        {/* ─── Days ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Repeat</Text>
-          <View style={styles.daysRow}>
-            {DAYS.map((d, i) => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.dayButton, selectedDays.includes(i) && styles.daySelected]}
-                onPress={() => toggleDay(i)}
-              >
-                <Text style={[styles.dayText, selectedDays.includes(i) && styles.dayTextSelected]}>
-                  {d}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ─── Alarm Tone ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Alarm Tone</Text>
-          <View style={styles.toneList}>
-            {BUILTIN_TONES.map((tone) => (
-              <TouchableOpacity
-                key={tone.id}
-                style={[styles.toneItem, selectedTone === tone.id && styles.toneItemSelected]}
-                onPress={() => setSelectedTone(tone.id)}
-              >
-                <View style={[styles.toneRadio, selectedTone === tone.id && styles.toneRadioActive]}>
-                  {selectedTone === tone.id && <View style={styles.toneRadioDot} />}
-                </View>
-                <Icon name={tone.icon} size={20} color={selectedTone === tone.id ? colors.primaryLight : colors.textSecondary} />
-                <Text style={[styles.toneName, selectedTone === tone.id && styles.toneNameSelected]}>
-                  {tone.name}
-                </Text>
-                <TouchableOpacity
-                  style={styles.tonePlayBtn}
-                  onPress={() => playTone(tone.id)}
-                >
-                  <Icon
-                    name={playingTone === tone.id ? 'stop-circle' : 'play-circle'}
-                    size={28}
-                    color={playingTone === tone.id ? colors.danger : colors.primaryLight}
-                  />
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
-
-            {/* Custom Sound */}
+          <Text style={styles.timeSeparator}>:</Text>
+          <ScrollPicker
+            data={MINUTES}
+            selectedValue={minute}
+            onValueChange={setMinute}
+            formatLabel={(v) => v.toString().padStart(2, '0')}
+            width={85}
+          />
+          <View style={styles.ampmContainer}>
             <TouchableOpacity
-              style={[styles.toneItem, selectedTone === 'custom' && styles.toneItemSelected]}
-              onPress={pickCustomSound}
+              style={[styles.ampmButton, period === 'AM' && styles.ampmActive]}
+              onPress={() => setPeriod('AM')}
             >
-              <View style={[styles.toneRadio, selectedTone === 'custom' && styles.toneRadioActive]}>
-                {selectedTone === 'custom' && <View style={styles.toneRadioDot} />}
-              </View>
-              <Icon name="folder-open-outline" size={20} color={selectedTone === 'custom' ? colors.primaryLight : colors.textSecondary} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.toneName, selectedTone === 'custom' && styles.toneNameSelected]}>
-                  {customToneName || 'Choose from Device'}
-                </Text>
-                {customToneName && (
-                  <Text style={styles.toneSubtext}>Custom sound</Text>
-                )}
-              </View>
-              {customToneUri && (
-                <TouchableOpacity
-                  style={styles.tonePlayBtn}
-                  onPress={() => playTone('custom')}
-                >
-                  <Icon
-                    name={playingTone === 'custom' ? 'stop-circle' : 'play-circle'}
-                    size={28}
-                    color={playingTone === 'custom' ? colors.danger : colors.primaryLight}
-                  />
-                </TouchableOpacity>
-              )}
+              <Text style={[styles.ampmText, period === 'AM' && styles.ampmTextActive]}>AM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.ampmButton, period === 'PM' && styles.ampmActive]}
+              onPress={() => setPeriod('PM')}
+            >
+              <Text style={[styles.ampmText, period === 'PM' && styles.ampmTextActive]}>PM</Text>
             </TouchableOpacity>
           </View>
         </View>
+      </View>
 
-        {/* ─── Penalty ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Snooze Penalty</Text>
-          <View style={styles.penaltyRow}>
-            <Text style={styles.dollarSign}>$</Text>
-            <TextInput
-              style={styles.penaltyInput}
-              value={penalty}
-              onChangeText={(text) => {
-                // Only allow numbers and one decimal point
-                const cleaned = text.replace(/[^0-9.]/g, '');
-                setPenalty(cleaned);
-              }}
-              onBlur={() => {
-                // Enforce $1 minimum when user leaves the field
-                const val = parseFloat(penalty);
-                if (isNaN(val) || val < 1) setPenalty('1');
-              }}
-              keyboardType="decimal-pad"
-              placeholder="1.00"
-              placeholderTextColor={colors.textMuted}
-            />
-            <Text style={styles.perSnooze}>per snooze (min $1)</Text>
-          </View>
+      {/* ─── Label ─── */}
+      <TextInput
+        style={styles.input}
+        placeholder="Alarm Label (e.g. Wake up for gym)"
+        placeholderTextColor={colors.textMuted}
+        value={label}
+        onChangeText={setLabel}
+      />
 
-          <View style={styles.toggleRow}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.toggleLabelRow}>
-                <Text style={styles.switchLabel}>Escalating Penalty</Text>
-                <View style={styles.redPill}>
-                  <Text style={styles.redPillText}>{escalating ? 'ON' : 'OFF'}</Text>
-                </View>
-              </View>
-              <Text style={styles.switchDesc}>Doubles each snooze: $1 → $2 → $4 → $8</Text>
-            </View>
-            <Switch
-              value={escalating}
-              onValueChange={setEscalating}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: colors.danger + '80' }}
-              thumbColor={escalating ? colors.danger : colors.textMuted}
-            />
-          </View>
-        </View>
-
-        {/* ─── Snooze Duration ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Snooze Duration</Text>
-          <View style={styles.penaltyRow}>
-            <TextInput
-              style={styles.penaltyInput}
-              value={String(snoozeDuration)}
-              onChangeText={(text) => {
-                const cleaned = text.replace(/[^0-9]/g, '');
-                setSnoozeDuration(cleaned ? parseInt(cleaned, 10) : 0);
-              }}
-              onBlur={() => {
-                if (snoozeDuration < 1) setSnoozeDuration(1);
-                if (snoozeDuration > 30) setSnoozeDuration(30);
-              }}
-              keyboardType="number-pad"
-              placeholder="5"
-              placeholderTextColor={colors.textMuted}
-            />
-            <Text style={styles.perSnooze}>minutes (1-30)</Text>
-          </View>
-        </View>
-
-        {/* ─── Wake-Up Task ─── */}
-        <View style={styles.glassCard}>
-          <Text style={styles.sectionTitle}>Wake-Up Task</Text>
-          <View style={styles.optionGrid}>
-            {TASKS.map((t) => (
-              <TouchableOpacity
-                key={t.value}
-                style={[styles.taskButton, taskType === t.value && styles.optionSelected]}
-                onPress={() => setTaskType(t.value)}
-              >
-                <Icon
-                  name={t.icon}
-                  size={18}
-                  color={taskType === t.value ? colors.text : colors.textSecondary}
-                />
-                <Text style={[styles.optionText, taskType === t.value && styles.optionTextSelected]}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Difficulty</Text>
-          <View style={styles.optionRow}>
-            {DIFFICULTIES.map((d) => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.optionButton, difficulty === d && styles.optionSelected]}
-                onPress={() => setDifficulty(d)}
-              >
-                <Text style={[styles.optionText, difficulty === d && styles.optionTextSelected]}>
-                  {d}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ─── No Escape Mode ─── */}
-        <View style={styles.glassCard}>
-          <View style={styles.toggleRow}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.toggleLabelRow}>
-                <Text style={styles.switchLabel}>No-Escape Mode</Text>
-                <View style={styles.redPill}>
-                  <Text style={styles.redPillText}>{noEscape ? 'ON' : 'OFF'}</Text>
-                </View>
-              </View>
-              <Text style={styles.switchDesc}>Auto-charge if you force close the app</Text>
-            </View>
-            <Switch
-              value={noEscape}
-              onValueChange={setNoEscape}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: colors.danger + '80' }}
-              thumbColor={noEscape ? colors.danger : colors.textMuted}
-            />
-          </View>
-        </View>
-
-        {/* ─── Save / Delete ─── */}
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Icon name={existingAlarm ? 'checkmark-circle-outline' : 'add-circle-outline'} size={22} color="#050510" />
-          <Text style={styles.saveText}>
-            {saving ? 'Saving...' : existingAlarm ? 'Update Alarm' : 'Create Alarm'}
-          </Text>
-        </TouchableOpacity>
-
-        {existingAlarm && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <Icon name="trash-outline" size={20} color={colors.danger} />
-            <Text style={styles.deleteText}>Delete Alarm</Text>
+      {/* ─── Days ─── */}
+      <Text style={styles.sectionTitle}>Repeat</Text>
+      <View style={styles.daysRow}>
+        {DAYS.map((d, i) => (
+          <TouchableOpacity
+            key={d}
+            style={[styles.dayButton, selectedDays.includes(i) && styles.daySelected]}
+            onPress={() => toggleDay(i)}
+          >
+            <Text style={[styles.dayText, selectedDays.includes(i) && styles.dayTextSelected]}>
+              {d}
+            </Text>
           </TouchableOpacity>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+        ))}
+      </View>
+
+      {/* ─── Alarm Tone ─── */}
+      <Text style={styles.sectionTitle}>Alarm Tone</Text>
+      <View style={styles.toneList}>
+        {BUILTIN_TONES.map((tone) => (
+          <TouchableOpacity
+            key={tone.id}
+            style={[styles.toneItem, selectedTone === tone.id && styles.toneItemSelected]}
+            onPress={() => setSelectedTone(tone.id)}
+          >
+            <View style={[styles.toneRadio, selectedTone === tone.id && styles.toneRadioActive]}>
+              {selectedTone === tone.id && <View style={styles.toneRadioDot} />}
+            </View>
+            <Icon name={tone.icon} size={20} color={selectedTone === tone.id ? colors.primary : colors.textSecondary} />
+            <Text style={[styles.toneName, selectedTone === tone.id && styles.toneNameSelected]}>
+              {tone.name}
+            </Text>
+            <TouchableOpacity
+              style={styles.tonePlayBtn}
+              onPress={() => playTone(tone.id)}
+            >
+              <Icon
+                name={playingTone === tone.id ? 'stop-circle' : 'play-circle'}
+                size={28}
+                color={playingTone === tone.id ? colors.danger : colors.primary}
+              />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
+
+        {/* Custom Sound */}
+        <TouchableOpacity
+          style={[styles.toneItem, selectedTone === 'custom' && styles.toneItemSelected]}
+          onPress={pickCustomSound}
+        >
+          <View style={[styles.toneRadio, selectedTone === 'custom' && styles.toneRadioActive]}>
+            {selectedTone === 'custom' && <View style={styles.toneRadioDot} />}
+          </View>
+          <Icon name="folder-open-outline" size={20} color={selectedTone === 'custom' ? colors.primary : colors.textSecondary} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.toneName, selectedTone === 'custom' && styles.toneNameSelected]}>
+              {customToneName || 'Choose from Device'}
+            </Text>
+            {customToneName && (
+              <Text style={styles.toneSubtext}>Custom sound</Text>
+            )}
+          </View>
+          {customToneUri && (
+            <TouchableOpacity
+              style={styles.tonePlayBtn}
+              onPress={() => playTone('custom')}
+            >
+              <Icon
+                name={playingTone === 'custom' ? 'stop-circle' : 'play-circle'}
+                size={28}
+                color={playingTone === 'custom' ? colors.danger : colors.primary}
+              />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* ─── Penalty ─── */}
+      <Text style={styles.sectionTitle}>Snooze Penalty</Text>
+      <View style={styles.penaltyRow}>
+        <Text style={styles.dollarSign}>$</Text>
+        <TextInput
+          style={styles.penaltyInput}
+          value={penalty}
+          onChangeText={(text) => {
+            // Only allow numbers and one decimal point
+            const cleaned = text.replace(/[^0-9.]/g, '');
+            setPenalty(cleaned);
+          }}
+          onBlur={() => {
+            // Enforce $1 minimum when user leaves the field
+            const val = parseFloat(penalty);
+            if (isNaN(val) || val < 1) setPenalty('1');
+          }}
+          keyboardType="decimal-pad"
+          placeholder="1.00"
+          placeholderTextColor={colors.textMuted}
+        />
+        <Text style={styles.perSnooze}>per snooze (min $1)</Text>
+      </View>
+
+      <View style={styles.switchRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.switchLabel}>Escalating Penalty</Text>
+          <Text style={styles.switchDesc}>Doubles each snooze: $1 → $2 → $4 → $8</Text>
+        </View>
+        <Switch
+          value={escalating}
+          onValueChange={setEscalating}
+          trackColor={{ false: colors.surfaceLight, true: colors.danger + '80' }}
+          thumbColor={escalating ? colors.danger : colors.textMuted}
+        />
+      </View>
+
+      {/* ─── Snooze Duration ─── */}
+      <Text style={styles.sectionTitle}>Snooze Duration</Text>
+      <View style={styles.penaltyRow}>
+        <TextInput
+          style={styles.penaltyInput}
+          value={String(snoozeDuration)}
+          onChangeText={(text) => {
+            const cleaned = text.replace(/[^0-9]/g, '');
+            setSnoozeDuration(cleaned ? parseInt(cleaned, 10) : 0);
+          }}
+          onBlur={() => {
+            if (snoozeDuration < 1) setSnoozeDuration(1);
+            if (snoozeDuration > 30) setSnoozeDuration(30);
+          }}
+          keyboardType="number-pad"
+          placeholder="5"
+          placeholderTextColor={colors.textMuted}
+        />
+        <Text style={styles.perSnooze}>minutes (1–30)</Text>
+      </View>
+
+      {/* ─── Wake-Up Task ─── */}
+      <Text style={styles.sectionTitle}>Wake-Up Task</Text>
+      <View style={styles.optionGrid}>
+        {TASKS.map((t) => (
+          <TouchableOpacity
+            key={t.value}
+            style={[styles.taskButton, taskType === t.value && styles.optionSelected]}
+            onPress={() => setTaskType(t.value)}
+          >
+            <Icon
+              name={t.icon}
+              size={18}
+              color={taskType === t.value ? colors.text : colors.textSecondary}
+            />
+            <Text style={[styles.optionText, taskType === t.value && styles.optionTextSelected]}>
+              {t.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.sectionTitle}>Difficulty</Text>
+      <View style={styles.optionRow}>
+        {DIFFICULTIES.map((d) => (
+          <TouchableOpacity
+            key={d}
+            style={[styles.optionButton, difficulty === d && styles.optionSelected]}
+            onPress={() => setDifficulty(d)}
+          >
+            <Text style={[styles.optionText, difficulty === d && styles.optionTextSelected]}>
+              {d}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* ─── No Escape Mode ─── */}
+      <View style={[styles.switchRow, { marginTop: spacing.lg }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.switchLabel}>No-Escape Mode</Text>
+          <Text style={styles.switchDesc}>Auto-charge if you force close the app</Text>
+        </View>
+        <Switch
+          value={noEscape}
+          onValueChange={setNoEscape}
+          trackColor={{ false: colors.surfaceLight, true: colors.danger + '80' }}
+          thumbColor={noEscape ? colors.danger : colors.textMuted}
+        />
+      </View>
+
+      {/* ─── Save / Delete ─── */}
+      <TouchableOpacity
+        style={[styles.saveButton, saving && styles.saveDisabled]}
+        onPress={handleSave}
+        disabled={saving}
+      >
+        <Icon name={existingAlarm ? 'checkmark-circle-outline' : 'add-circle-outline'} size={22} color={colors.background} />
+        <Text style={styles.saveText}>
+          {saving ? 'Saving...' : existingAlarm ? 'Update Alarm' : 'Create Alarm'}
+        </Text>
+      </TouchableOpacity>
+
+      {existingAlarm && (
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Icon name="trash-outline" size={20} color={colors.danger} />
+          <Text style={styles.deleteText}>Delete Alarm</Text>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
+    </GradientBackground>
   );
 }
 
 // ─── Styles ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#050510',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-  },
   container: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: spacing.lg, paddingBottom: 100, paddingTop: spacing.sm },
-
-  // Glass card
-  glassCard: {
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
+  content: { padding: spacing.lg, paddingBottom: 100, paddingTop: spacing.lg },
 
   // Time picker
+  timeSection: {
+    marginBottom: spacing.xl,
+  },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -739,8 +668,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   timeSeparator: {
-    fontSize: 40,
-    color: colors.primaryLight,
+    fontSize: 36,
+    color: colors.text,
     fontWeight: '700',
   },
   ampmContainer: {
@@ -751,14 +680,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
   },
   ampmActive: {
-    backgroundColor: 'rgba(108, 60, 225, 0.5)',
-    borderColor: colors.primaryLight,
+    backgroundColor: 'rgba(108, 60, 225, 0.6)',
+    borderColor: 'rgba(139, 92, 246, 0.4)',
   },
   ampmText: {
     fontSize: fontSize.md,
@@ -769,39 +698,39 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
-  // Section
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-
   // Input
   input: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     color: colors.text,
     fontSize: fontSize.md,
+    marginBottom: spacing.lg,
+  },
+
+  // Section
+  sectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
   },
 
   // Days
   daysRow: { flexDirection: 'row', gap: spacing.xs },
   dayButton: {
     flex: 1,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
   },
-  daySelected: { backgroundColor: 'rgba(108, 60, 225, 0.5)', borderColor: colors.primaryLight },
+  daySelected: { backgroundColor: 'rgba(108, 60, 225, 0.6)', borderColor: 'rgba(139, 92, 246, 0.4)' },
   dayText: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '600' },
   dayTextSelected: { color: colors.text },
 
@@ -812,16 +741,16 @@ const styles = StyleSheet.create({
   toneItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   toneItemSelected: {
     backgroundColor: 'rgba(108, 60, 225, 0.15)',
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   toneRadio: {
     width: 20,
@@ -833,13 +762,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toneRadioActive: {
-    borderColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   toneRadioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primary,
   },
   toneName: {
     flex: 1,
@@ -863,9 +792,9 @@ const styles = StyleSheet.create({
   penaltyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dollarSign: { fontSize: fontSize.xl, color: colors.danger, fontWeight: '700' },
   penaltyInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     padding: spacing.md,
     color: colors.danger,
@@ -876,34 +805,20 @@ const styles = StyleSheet.create({
   },
   perSnooze: { fontSize: fontSize.sm, color: colors.textSecondary },
 
-  // Toggles
-  toggleRow: {
+  // Switches
+  switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     marginTop: spacing.md,
-  },
-  toggleLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
   },
   switchLabel: { fontSize: fontSize.md, color: colors.text, fontWeight: '600' },
   switchDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
-  redPill: {
-    backgroundColor: 'rgba(255, 107, 107, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 107, 0.4)',
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  redPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.danger,
-    letterSpacing: 0.5,
-  },
 
   // Options
   optionRow: { flexDirection: 'row', gap: spacing.sm },
@@ -914,9 +829,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -926,42 +841,44 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     flexDirection: 'row',
     gap: 6,
   },
-  optionSelected: { backgroundColor: 'rgba(108, 60, 225, 0.5)', borderColor: colors.primaryLight },
+  optionSelected: { backgroundColor: 'rgba(108, 60, 225, 0.6)', borderColor: 'rgba(139, 92, 246, 0.4)' },
   optionText: { fontSize: fontSize.sm, color: colors.textSecondary, fontWeight: '600' },
   optionTextSelected: { color: colors.text },
 
   // Save / Delete
   saveButton: {
-    backgroundColor: colors.accent,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 2,
+    backgroundColor: 'rgba(0, 230, 118, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     alignItems: 'center',
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.sm,
-    shadowColor: colors.accent,
+    shadowColor: '#00E676',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   saveDisabled: { opacity: 0.6 },
   saveText: { fontSize: fontSize.lg, fontWeight: '700', color: '#050510' },
   deleteButton: {
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
     marginTop: spacing.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 107, 107, 0.3)',
-    backgroundColor: 'rgba(255, 107, 107, 0.08)',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.sm,

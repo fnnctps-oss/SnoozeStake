@@ -36,7 +36,11 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const stackScreenOptions = {
-  headerShown: false,
+  headerStyle: {
+    backgroundColor: 'rgba(10, 5, 21, 0.95)',
+  },
+  headerShadowVisible: false,
+  headerTintColor: colors.text,
   contentStyle: { backgroundColor: colors.background },
 };
 
