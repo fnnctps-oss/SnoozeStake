@@ -35,14 +35,45 @@ function generateMathProblem(difficulty: string): MathProblem {
 
 // ===== TYPING TASK =====
 const TYPING_SENTENCES = [
-  'The quick brown fox jumps over the lazy dog',
+  // Morning motivation
   'Every morning is a fresh start to be better',
-  'Success is not final failure is not fatal',
   'Rise and grind the early bird catches the worm',
-  'Discipline is choosing between what you want now and what you want most',
   'Good things come to those who wake up early',
   'Today is going to be an amazing productive day',
   'The secret of getting ahead is getting started',
+  'Wake up and be awesome starting right now',
+  'Your future self is counting on you right now',
+  'A great morning leads to a great day ahead',
+  'Get up and make today count no excuses',
+  'Morning is the foundation of everything you will build today',
+  // Discipline
+  'Discipline is choosing between what you want now and what you want most',
+  'Success is not final failure is not fatal it is the courage to continue',
+  'Small daily improvements lead to stunning long term results',
+  'The pain of discipline is far less than the pain of regret',
+  'Winners wake up early and start before they feel ready',
+  'Do something today that your future self will thank you for',
+  'Motivation gets you started but discipline keeps you going',
+  'Be so good they cannot ignore you',
+  'Hard work beats talent when talent does not work hard',
+  'Champions are made in the moments when they want to quit',
+  // Mindset
+  'You do not have to be great to start but you have to start to be great',
+  'The only bad workout is the one that did not happen',
+  'Today I choose to rise above the snooze button',
+  'Believe you can and you are already halfway there',
+  'Act as if what you do makes a difference because it does',
+  'The difference between ordinary and extraordinary is that little extra',
+  'Dream big work hard stay focused and surround yourself with good people',
+  'You are stronger than you think and braver than you believe',
+  'Push yourself because no one else is going to do it for you',
+  'Stop waiting for the perfect moment take the moment and make it perfect',
+  // Quirky / fun
+  'Coffee is great but getting up is the first win of the day',
+  'Your bed is comfortable but your goals are waiting outside it',
+  'Snoozing costs money around here so lets get moving already',
+  'The world belongs to those who show up early and stay focused',
+  'Every expert was once a beginner who refused to give up',
 ];
 
 function getTypingSentence(difficulty: string): string {
