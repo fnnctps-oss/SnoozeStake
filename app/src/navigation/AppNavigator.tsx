@@ -37,11 +37,15 @@ const Stack = createNativeStackNavigator();
 
 const stackScreenOptions = {
   headerStyle: {
-    backgroundColor: 'rgba(10, 5, 21, 0.95)',
+    backgroundColor: '#000000',
   },
   headerShadowVisible: false,
   headerTintColor: colors.text,
-  contentStyle: { backgroundColor: colors.background },
+  headerTitleStyle: {
+    fontWeight: '600' as const,
+    fontSize: 17,
+  },
+  contentStyle: { backgroundColor: '#000000' },
 };
 
 function AlarmStack() {
@@ -105,15 +109,15 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(12, 6, 24, 0.95)',
-          borderTopWidth: 1,
-          borderTopColor: 'rgba(139, 92, 246, 0.12)',
+          backgroundColor: 'rgba(18, 18, 18, 0.96)',
+          borderTopWidth: 0.5,
+          borderTopColor: 'rgba(255, 255, 255, 0.12)',
           height: 85,
           paddingTop: 8,
           paddingBottom: 28,
         },
-        tabBarActiveTintColor: colors.primaryLight,
-        tabBarInactiveTintColor: 'rgba(160, 160, 190, 0.5)',
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.35)',
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',

@@ -19,7 +19,7 @@ import { scheduleAlarmNotifications, cancelAlarmNotifications } from '../service
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function LiquidGlassAlarmCard({
+function AlarmCard({
   item,
   onPress,
   onToggle,
@@ -32,60 +32,74 @@ function LiquidGlassAlarmCard({
     const [h, m] = time.split(':').map(Number);
     const period = h >= 12 ? 'PM' : 'AM';
     const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
+    return { time: `${hour}:${m.toString().padStart(2, '0')}`, period };
   };
 
+  const { time: timeStr, period } = formatTime(item.time);
+
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
-      <View style={[styles.liquidCard, !item.isEnabled && styles.alarmDisabled]}>
-        <LinearGradient
-          colors={['rgba(108, 60, 225, 0.22)', 'rgba(139, 92, 246, 0.08)', 'rgba(108, 60, 225, 0.15)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        {/* Top glass highlight */}
-        <View style={styles.glassHighlight} />
-        <View style={styles.alarmRow}>
-          <View style={styles.alarmInfo}>
-            <Text style={[styles.alarmTime, !item.isEnabled && styles.textDisabled]}>
-              {formatTime(item.time)}
+    <TouchableOpacity activeOpacity={0.75} onPress={onPress}>
+      <View style={[styles.card, !item.isEnabled && styles.cardDisabled]}>
+        {/* Glass highlight line at top */}
+        <View style={styles.cardHighlight} />
+
+        {/* Top row: time + period + toggle */}
+        <View style={styles.cardTopRow}>
+          <View style={styles.timeWrap}>
+            <Text style={[styles.timeText, !item.isEnabled && styles.textDisabled]}>
+              {timeStr}
             </Text>
-            <Text style={[styles.alarmLabel, !item.isEnabled && styles.textDisabled]}>
-              {item.label}
+            <Text style={[styles.periodText, !item.isEnabled && styles.textDisabled]}>
+              {period}
             </Text>
-            <View style={styles.daysRow}>
-              {DAYS.map((d, i) => (
-                <Text
-                  key={d}
-                  style={[
-                    styles.dayBadge,
-                    item.daysOfWeek.includes(i) && styles.dayActive,
-                  ]}
-                >
-                  {d}
-                </Text>
-              ))}
-            </View>
-            <View style={styles.penaltyRow}>
-              <Text style={styles.penaltyText}>
-                ${Number(item.snoozeBasePenalty).toFixed(2)} per snooze
-              </Text>
-              {item.useEscalatingPenalty && (
-                <Text style={styles.escalatingBadge}>Escalating</Text>
-              )}
-              {item.noEscapeMode && (
-                <Text style={styles.noEscapeBadge}>No Escape</Text>
-              )}
-            </View>
           </View>
           <Switch
             value={item.isEnabled}
             onValueChange={onToggle}
-            trackColor={{ false: 'rgba(255,255,255,0.1)', true: 'rgba(108,60,225,0.5)' }}
-            thumbColor={item.isEnabled ? colors.primaryLight : colors.textMuted}
+            trackColor={{
+              false: 'rgba(255,255,255,0.15)',
+              true: 'rgba(255,255,255,0.35)',
+            }}
+            thumbColor="#FFFFFF"
+            ios_backgroundColor="rgba(255,255,255,0.15)"
           />
         </View>
+
+        {/* Label */}
+        <Text style={[styles.labelText, !item.isEnabled && styles.textDisabled]}>
+          {item.label}
+        </Text>
+
+        {/* Days row */}
+        <View style={styles.daysRow}>
+          {DAYS.map((d, i) => (
+            <Text
+              key={d}
+              style={[
+                styles.dayBadge,
+                item.daysOfWeek.includes(i) && styles.dayActive,
+              ]}
+            >
+              {d}
+            </Text>
+          ))}
+        </View>
+
+        {/* Tags row */}
+        {(item.useEscalatingPenalty || item.noEscapeMode) && (
+          <View style={styles.tagsRow}>
+            {item.useEscalatingPenalty && (
+              <View style={styles.tagOrange}>
+                <Text style={styles.tagText}>Escalating</Text>
+              </View>
+            )}
+            {item.noEscapeMode && (
+              <View style={styles.tagRed}>
+                <Text style={styles.tagText}>No Escape</Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -113,7 +127,6 @@ export function AlarmListScreen({ navigation }: any) {
     toggleAlarm(alarm.id);
     try {
       await alarmApi.toggle(alarm.id);
-      // Schedule or cancel notifications based on new state
       if (newActive) {
         await scheduleAlarmNotifications({
           id: alarm.id,
@@ -137,7 +150,7 @@ export function AlarmListScreen({ navigation }: any) {
   };
 
   const renderAlarm = ({ item }: { item: Alarm }) => (
-    <LiquidGlassAlarmCard
+    <AlarmCard
       item={item}
       onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
       onToggle={() => handleToggle(item)}
@@ -152,26 +165,35 @@ export function AlarmListScreen({ navigation }: any) {
         renderItem={renderAlarm}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryLight} />
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <View style={styles.emptyIconWrap}>
-              <Icon name="alarm-outline" size={64} color={colors.primaryLight} />
+              <Icon name="alarm-outline" size={52} color="rgba(255,255,255,0.25)" />
             </View>
             <Text style={styles.emptyText}>No alarms yet</Text>
             <Text style={styles.emptySubtext}>
-              Create your first alarm and put real money on the line!
+              Tap + to create your first alarm
             </Text>
           </View>
         }
       />
 
+      {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('CreateAlarm')}
+        activeOpacity={0.85}
       >
-        <Icon name="add" size={28} color={colors.text} />
+        <LinearGradient
+          colors={['#9B59F5', '#6C3CE1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabGradient}
+        >
+          <Icon name="add" size={28} color="#FFFFFF" />
+        </LinearGradient>
       </TouchableOpacity>
     </GradientBackground>
   );
@@ -182,111 +204,135 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
     paddingBottom: 100,
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
   },
-  liquidCard: {
-    borderRadius: borderRadius.xl,
+
+  // Alarm card — Apple liquid glass style
+  card: {
+    borderRadius: borderRadius.xxl,
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.35)',
+    borderColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     padding: spacing.lg,
     overflow: 'hidden',
-    shadowColor: '#6C3CE1',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.30,
+    shadowRadius: 20,
   },
-  glassHighlight: {
+  cardHighlight: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.20)',
   },
-  alarmRow: {
+  cardDisabled: {
+    opacity: 0.45,
+  },
+
+  // Time display
+  cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 4,
   },
-  alarmDisabled: {
-    opacity: 0.5,
+  timeWrap: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: spacing.sm,
   },
-  alarmInfo: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  alarmTime: {
-    fontSize: fontSize.xxl,
+  timeText: {
+    fontSize: 52,
     fontWeight: '700',
-    color: colors.text,
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    lineHeight: 56,
   },
-  alarmLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginTop: 2,
+  periodText: {
+    fontSize: fontSize.xl,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.75)',
+    marginBottom: 6,
+  },
+  labelText: {
+    fontSize: fontSize.md,
+    color: 'rgba(255,255,255,0.65)',
+    fontWeight: '500',
+    marginBottom: spacing.sm,
   },
   textDisabled: {
-    color: colors.textMuted,
+    color: 'rgba(255,255,255,0.30)',
   },
+
+  // Days
   daysRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    gap: 5,
+    marginTop: 2,
   },
   dayBadge: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.28)',
+    fontWeight: '600',
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    paddingVertical: 3,
+    borderRadius: 6,
     overflow: 'hidden',
   },
   dayActive: {
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
-    color: colors.primaryLight,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    color: 'rgba(255,255,255,0.85)',
   },
-  penaltyRow: {
+
+  // Tag badges
+  tagsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
   },
-  penaltyText: {
-    fontSize: fontSize.xs,
-    color: colors.danger,
-    fontWeight: '600',
+  tagOrange: {
+    backgroundColor: '#F97316',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    shadowColor: '#F97316',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
   },
-  escalatingBadge: {
-    fontSize: fontSize.xs,
-    color: colors.warning,
-    backgroundColor: 'rgba(255, 176, 32, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-    overflow: 'hidden',
+  tagRed: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
   },
-  noEscapeBadge: {
-    fontSize: fontSize.xs,
-    color: colors.danger,
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-    overflow: 'hidden',
+  tagText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
+
+  // Empty state
   empty: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 120,
     gap: spacing.sm,
   },
   emptyIconWrap: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(108, 60, 225, 0.12)',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -298,25 +344,29 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
+    color: colors.textMuted,
     textAlign: 'center',
-    paddingHorizontal: spacing.xl,
   },
+
+  // FAB
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 24,
+    right: 20,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(108, 60, 225, 0.8)',
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#6C3CE1',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    shadowOpacity: 0.55,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  fabGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

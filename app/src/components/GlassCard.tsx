@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import { colors, borderRadius, spacing } from '../utils/theme';
+import { borderRadius, spacing } from '../utils/theme';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -11,21 +11,16 @@ interface GlassCardProps {
 export function GlassCard({ children, style, variant = 'default' }: GlassCardProps) {
   const bgColor =
     variant === 'purple'
-      ? 'rgba(108, 60, 225, 0.18)'
+      ? 'rgba(255, 255, 255, 0.11)'
       : variant === 'accent'
-        ? 'rgba(0, 230, 118, 0.08)'
-        : colors.surface;
+        ? 'rgba(255, 255, 255, 0.08)'
+        : 'rgba(255, 255, 255, 0.08)';
 
-  const borderColor =
-    variant === 'purple'
-      ? 'rgba(139, 92, 246, 0.35)'
-      : variant === 'accent'
-        ? 'rgba(0, 230, 118, 0.15)'
-        : colors.surfaceBorder;
+  const borderColor = 'rgba(255, 255, 255, 0.10)';
 
   return (
     <View style={[styles.card, { backgroundColor: bgColor, borderColor }, style]}>
-      {/* Top highlight for glass effect */}
+      {/* Top gloss highlight — Apple liquid glass look */}
       <View style={styles.highlight} />
       {children}
     </View>
@@ -38,6 +33,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.md,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   highlight: {
     position: 'absolute',
@@ -45,6 +44,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: colors.glassHighlight,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
   },
 });
