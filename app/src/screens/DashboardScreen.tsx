@@ -69,7 +69,7 @@ export function DashboardScreen() {
         style={styles.container}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="rgba(255,255,255,0.5)" />
         }
       >
         {/* Streak */}
@@ -152,37 +152,40 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: spacing.md, paddingBottom: 40, paddingTop: 100 },
+  content: { padding: spacing.md, paddingBottom: 40, paddingTop: spacing.sm },
   streakCard: {
-    borderRadius: borderRadius.xl,
+    borderRadius: 28,
     padding: spacing.xl,
     alignItems: 'center' as const,
     marginBottom: spacing.lg,
   },
-  streakCardActive: { borderColor: '#FF6B3530' },
+  streakCardActive: { borderColor: 'rgba(255,107,53,0.20)' },
   streakIconWrap: { marginBottom: spacing.xs },
   streakCount: {
-    fontSize: 64,
-    fontWeight: '800',
+    fontSize: 72,
+    fontWeight: '700',
     color: colors.text,
     marginTop: spacing.xs,
+    letterSpacing: -2,
   },
   streakLabel: {
     fontSize: fontSize.lg,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.65)',
     fontWeight: '600',
   },
   longestStreak: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: 'rgba(255,255,255,0.35)',
     marginTop: spacing.xs,
   },
   sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.40)',
     marginBottom: spacing.sm,
     marginTop: spacing.md,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.8,
   },
   statsRow: {
     flexDirection: 'row' as const,
@@ -190,22 +193,23 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: 20,
     padding: spacing.md,
     alignItems: 'center' as const,
     gap: 6,
   },
   statValue: {
-    fontSize: fontSize.lg,
-    fontWeight: '800',
+    fontSize: fontSize.xl,
+    fontWeight: '700',
     color: colors.text,
   },
   statLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.45)',
+    fontWeight: '500',
   },
   walletCard: {
-    borderRadius: borderRadius.lg,
+    borderRadius: 20,
     padding: spacing.lg,
     gap: spacing.sm,
   },
@@ -213,13 +217,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
+    paddingVertical: 4,
   },
   walletRowLeft: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: spacing.sm,
   },
-  divider: { height: 1, backgroundColor: colors.border },
-  walletLabel: { fontSize: fontSize.md, color: colors.textSecondary },
+  divider: { height: 0.5, backgroundColor: 'rgba(255,255,255,0.08)' },
+  walletLabel: { fontSize: fontSize.md, color: 'rgba(255,255,255,0.65)', fontWeight: '500' },
   walletValue: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
 });

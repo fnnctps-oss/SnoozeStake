@@ -8,6 +8,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, fontSize, borderRadius } from '../utils/theme';
 import { useAlarmStore } from '../store/alarmStore';
@@ -32,74 +33,79 @@ function AlarmCard({
     const [h, m] = time.split(':').map(Number);
     const period = h >= 12 ? 'PM' : 'AM';
     const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return { time: `${hour}:${m.toString().padStart(2, '0')}`, period };
+    return { timeStr: `${hour}:${m.toString().padStart(2, '0')}`, period };
   };
 
-  const { time: timeStr, period } = formatTime(item.time);
+  const { timeStr, period } = formatTime(item.time);
+  const activeDays = DAYS.filter((_, i) => item.daysOfWeek.includes(i));
+  const daysLabel = activeDays.length === 7
+    ? 'Every day'
+    : activeDays.length === 5 && !item.daysOfWeek.includes(0) && !item.daysOfWeek.includes(6)
+      ? 'Weekdays'
+      : activeDays.join(', ');
 
   return (
     <TouchableOpacity activeOpacity={0.75} onPress={onPress}>
-      <View style={[styles.card, !item.isEnabled && styles.cardDisabled]}>
-        {/* Glass highlight line at top */}
-        <View style={styles.cardHighlight} />
+      <View style={[styles.cardOuter, !item.isEnabled && styles.cardDisabled]}>
+        {/* Real blur layer — the core of the glass effect */}
+        <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
+        {/* White tint overlay */}
+        <View style={[StyleSheet.absoluteFill, styles.cardTint]} />
+        {/* Top gloss line */}
+        <View style={styles.cardGloss} />
 
-        {/* Top row: time + period + toggle */}
-        <View style={styles.cardTopRow}>
-          <View style={styles.timeWrap}>
-            <Text style={[styles.timeText, !item.isEnabled && styles.textDisabled]}>
-              {timeStr}
-            </Text>
-            <Text style={[styles.periodText, !item.isEnabled && styles.textDisabled]}>
-              {period}
-            </Text>
+        <View style={styles.cardInner}>
+          {/* Time + Toggle row */}
+          <View style={styles.topRow}>
+            <View style={styles.timeBlock}>
+              <Text style={[styles.timeText, !item.isEnabled && styles.dimmed]}>
+                {timeStr}
+              </Text>
+              <Text style={[styles.periodText, !item.isEnabled && styles.dimmed]}>
+                {period}
+              </Text>
+            </View>
+            <Switch
+              value={item.isEnabled}
+              onValueChange={onToggle}
+              trackColor={{
+                false: 'rgba(255,255,255,0.20)',
+                true: 'rgba(255,255,255,0.45)',
+              }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor="rgba(255,255,255,0.20)"
+            />
           </View>
-          <Switch
-            value={item.isEnabled}
-            onValueChange={onToggle}
-            trackColor={{
-              false: 'rgba(255,255,255,0.15)',
-              true: 'rgba(255,255,255,0.35)',
-            }}
-            thumbColor="#FFFFFF"
-            ios_backgroundColor="rgba(255,255,255,0.15)"
-          />
-        </View>
 
-        {/* Label */}
-        <Text style={[styles.labelText, !item.isEnabled && styles.textDisabled]}>
-          {item.label}
-        </Text>
+          {/* Label */}
+          <Text style={[styles.labelText, !item.isEnabled && styles.dimmed]}>
+            {item.label}
+          </Text>
 
-        {/* Days row */}
-        <View style={styles.daysRow}>
-          {DAYS.map((d, i) => (
-            <Text
-              key={d}
-              style={[
-                styles.dayBadge,
-                item.daysOfWeek.includes(i) && styles.dayActive,
-              ]}
-            >
-              {d}
+          {/* Days */}
+          {daysLabel ? (
+            <Text style={styles.daysText}>{daysLabel}</Text>
+          ) : null}
+
+          {/* Penalty + Tags */}
+          <View style={styles.bottomRow}>
+            <Text style={styles.penaltyText}>
+              ${Number(item.snoozeBasePenalty).toFixed(2)} / snooze
             </Text>
-          ))}
-        </View>
-
-        {/* Tags row */}
-        {(item.useEscalatingPenalty || item.noEscapeMode) && (
-          <View style={styles.tagsRow}>
-            {item.useEscalatingPenalty && (
-              <View style={styles.tagOrange}>
-                <Text style={styles.tagText}>Escalating</Text>
-              </View>
-            )}
-            {item.noEscapeMode && (
-              <View style={styles.tagRed}>
-                <Text style={styles.tagText}>No Escape</Text>
-              </View>
-            )}
+            <View style={styles.tagsRow}>
+              {item.useEscalatingPenalty && (
+                <View style={styles.tagOrange}>
+                  <Text style={styles.tagText}>Escalating</Text>
+                </View>
+              )}
+              {item.noEscapeMode && (
+                <View style={styles.tagRed}>
+                  <Text style={styles.tagText}>No Escape</Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -113,14 +119,10 @@ export function AlarmListScreen({ navigation }: any) {
     try {
       const { alarms: data } = await alarmApi.list();
       setAlarms(data);
-    } catch {
-      // Silently fail on refresh
-    }
+    } catch {}
   };
 
-  useEffect(() => {
-    loadAlarms();
-  }, []);
+  useEffect(() => { loadAlarms(); }, []);
 
   const handleToggle = async (alarm: Alarm) => {
     const newActive = !alarm.isEnabled;
@@ -149,48 +151,44 @@ export function AlarmListScreen({ navigation }: any) {
     setRefreshing(false);
   };
 
-  const renderAlarm = ({ item }: { item: Alarm }) => (
-    <AlarmCard
-      item={item}
-      onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
-      onToggle={() => handleToggle(item)}
-    />
-  );
-
   return (
     <GradientBackground>
       <FlatList
         data={alarms}
         keyExtractor={(item) => item.id}
-        renderItem={renderAlarm}
+        renderItem={({ item }) => (
+          <AlarmCard
+            item={item}
+            onPress={() => navigation.navigate('CreateAlarm', { alarm: item })}
+            onToggle={() => handleToggle(item)}
+          />
+        )}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryLight} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="rgba(255,255,255,0.5)"
+          />
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <View style={styles.emptyIconWrap}>
-              <Icon name="alarm-outline" size={52} color="rgba(255,255,255,0.25)" />
+              <Icon name="alarm-outline" size={48} color="rgba(255,255,255,0.20)" />
             </View>
-            <Text style={styles.emptyText}>No alarms yet</Text>
-            <Text style={styles.emptySubtext}>
-              Tap + to create your first alarm
-            </Text>
+            <Text style={styles.emptyTitle}>No alarms yet</Text>
+            <Text style={styles.emptySubtext}>Tap + to set your first alarm</Text>
           </View>
         }
       />
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('CreateAlarm')}
-        activeOpacity={0.85}
-      >
+      {/* Floating Action Button */}
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CreateAlarm')} activeOpacity={0.85}>
         <LinearGradient
-          colors={['#9B59F5', '#6C3CE1']}
+          colors={['#A855F7', '#6C3CE1']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
+          style={styles.fabInner}
         >
           <Icon name="add" size={28} color="#FFFFFF" />
         </LinearGradient>
@@ -201,150 +199,153 @@ export function AlarmListScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   list: {
-    padding: spacing.md,
-    gap: spacing.md,
-    paddingBottom: 100,
-    paddingTop: spacing.sm,
+    padding: 16,
+    gap: 14,
+    paddingBottom: 110,
+    paddingTop: 10,
   },
 
-  // Alarm card — Apple liquid glass style
-  card: {
-    borderRadius: borderRadius.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
-    padding: spacing.lg,
+  // ── Alarm Card ──────────────────────────────────
+  cardOuter: {
+    borderRadius: 28,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.30,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    // Shadow for depth
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
     shadowRadius: 20,
   },
-  cardHighlight: {
+  cardTint: {
+    backgroundColor: 'rgba(255,255,255,0.13)',
+  },
+  cardGloss: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.20)',
+    backgroundColor: 'rgba(255,255,255,0.30)',
+    zIndex: 2,
+  },
+  cardInner: {
+    padding: 22,
+    paddingTop: 20,
   },
   cardDisabled: {
-    opacity: 0.45,
+    opacity: 0.40,
   },
 
-  // Time display
-  cardTopRow: {
+  // Time
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 4,
   },
-  timeWrap: {
+  timeBlock: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing.sm,
+    gap: 8,
   },
   timeText: {
-    fontSize: 52,
+    fontSize: 54,
     fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: -1,
-    lineHeight: 56,
+    letterSpacing: -1.5,
+    lineHeight: 58,
   },
   periodText: {
-    fontSize: fontSize.xl,
+    fontSize: 22,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.75)',
-    marginBottom: 6,
+    color: 'rgba(255,255,255,0.70)',
+    marginBottom: 8,
   },
+  dimmed: {
+    opacity: 0.45,
+  },
+
   labelText: {
-    fontSize: fontSize.md,
-    color: 'rgba(255,255,255,0.65)',
+    fontSize: 16,
     fontWeight: '500',
-    marginBottom: spacing.sm,
+    color: 'rgba(255,255,255,0.70)',
+    marginBottom: 4,
   },
-  textDisabled: {
-    color: 'rgba(255,255,255,0.30)',
+  daysText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.40)',
+    fontWeight: '500',
+    marginBottom: 14,
   },
 
-  // Days
-  daysRow: {
+  // Bottom row
+  bottomRow: {
     flexDirection: 'row',
-    gap: 5,
-    marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  dayBadge: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.28)',
-    fontWeight: '600',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    overflow: 'hidden',
+  penaltyText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.45)',
+    fontWeight: '500',
   },
-  dayActive: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    color: 'rgba(255,255,255,0.85)',
-  },
-
-  // Tag badges
   tagsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
+    gap: 8,
   },
   tagOrange: {
     backgroundColor: '#F97316',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: 20,
     shadowColor: '#F97316',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
+    shadowOpacity: 0.65,
+    shadowRadius: 10,
   },
   tagRed: {
     backgroundColor: '#EF4444',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: 20,
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
+    shadowOpacity: 0.65,
+    shadowRadius: 10,
   },
   tagText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 
   // Empty state
   empty: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 120,
-    gap: spacing.sm,
+    paddingTop: 130,
+    gap: 10,
   },
   emptyIconWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 10,
   },
-  emptyText: {
-    fontSize: fontSize.xl,
+  emptyTitle: {
+    fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
+    color: '#FFFFFF',
   },
   emptySubtext: {
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
   },
 
@@ -353,16 +354,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    shadowColor: '#6C3CE1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.55,
-    shadowRadius: 16,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 20,
     elevation: 8,
   },
-  fabGradient: {
+  fabInner: {
     width: 60,
     height: 60,
     borderRadius: 30,
