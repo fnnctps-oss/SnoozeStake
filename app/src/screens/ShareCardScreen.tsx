@@ -33,10 +33,11 @@ export function ShareCardScreen() {
     try {
       const fileUri = `${cacheDirectory}snoozestake-${cardType.id}.png`;
 
+      // Bug fix: removed wrong Content-Type request header — this is a file download,
+      // sending 'application/json' as a request header can cause server to reject it
       const result = await downloadAsync(
         `${API_BASE}${cardType.endpoint}`,
-        fileUri,
-        { headers: { 'Content-Type': 'application/json' } }
+        fileUri
       );
 
       setPreviewUri(result.uri);

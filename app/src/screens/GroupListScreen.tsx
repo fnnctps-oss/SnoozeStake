@@ -25,7 +25,9 @@ export function GroupListScreen({ navigation }: any) {
     try {
       const { groups: data } = await groupApi.list();
       setGroups(data);
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load groups:', err);
+    }
   };
 
   useEffect(() => { load(); }, []);

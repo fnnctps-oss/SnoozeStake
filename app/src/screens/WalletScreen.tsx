@@ -46,18 +46,25 @@ export function WalletScreen({ navigation }: any) {
   const [withdrawing, setWithdrawing] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
 
+  // Bug fix: derive balance early so handleWithdraw (defined below) can safely reference it
+  const balance = Number(walletData?.walletBalance || 0);
+  const totalSnoozed = Number(walletData?.totalSnoozed || 0);
+  const totalSaved = Number(walletData?.totalSaved || 0);
+
   const fetchData = useCallback(async () => {
     try {
-      const [wallet, history] = await Promise.all([
+      // Bug fix: use Promise.allSettled so one failure doesn't block both requests
+      const [walletResult, historyResult] = await Promise.allSettled([
         paymentApi.getWallet(),
         paymentApi.getHistory(),
       ]);
-      setWalletData(wallet);
-      setTransactions(history.transactions);
-      // Check for $0 balance
-      if (Number(wallet.walletBalance) <= 0) {
-        setShowEmptyModal(true);
+      const wallet = walletResult.status === 'fulfilled' ? walletResult.value : null;
+      const history = historyResult.status === 'fulfilled' ? historyResult.value : null;
+      if (wallet) {
+        setWalletData(wallet);
+        if (Number(wallet.walletBalance) <= 0) setShowEmptyModal(true);
       }
+      if (history) setTransactions(history.transactions);
     } catch (err) {
       console.warn('Failed to fetch wallet data:', err);
     }
@@ -191,10 +198,6 @@ export function WalletScreen({ navigation }: any) {
       </Text>
     </View>
   );
-
-  const balance = Number(walletData?.walletBalance || 0);
-  const totalSnoozed = Number(walletData?.totalSnoozed || 0);
-  const totalSaved = Number(walletData?.totalSaved || 0);
 
   // Determine warning level
   const warningLevel = balance <= 0 ? 'critical' : balance <= LOW_BALANCE_THRESHOLD_URGENT ? 'urgent' : balance <= LOW_BALANCE_THRESHOLD_WARN ? 'warning' : null;

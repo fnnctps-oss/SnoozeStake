@@ -97,7 +97,9 @@ export function DashboardScreen() {
           totalSaved: Number(data.user.totalSaved),
         });
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load stats:', err);
+    }
   };
 
   useEffect(() => { loadStats(); }, []);

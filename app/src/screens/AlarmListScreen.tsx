@@ -7,6 +7,7 @@ import {
   Switch,
   StyleSheet,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -120,7 +121,9 @@ export function AlarmListScreen({ navigation }: any) {
     try {
       const { alarms: data } = await alarmApi.list();
       setAlarms(data);
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load alarms:', err);
+    }
   };
 
   useEffect(() => { loadAlarms(); }, []);
@@ -141,8 +144,11 @@ export function AlarmListScreen({ navigation }: any) {
       } else {
         await cancelAlarmNotifications(alarm.id);
       }
-    } catch {
+    } catch (err: any) {
+      // Bug fix: revert optimistic toggle and tell the user why
       toggleAlarm(alarm.id);
+      console.warn('Toggle alarm failed:', err);
+      Alert.alert('Could not update alarm', err?.message || 'Please check your connection and try again.');
     }
   };
 

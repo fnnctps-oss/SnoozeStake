@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,10 @@ import { useAuthStore } from '../store/authStore';
 
 export function ReferralScreen() {
   const user = useAuthStore((s) => s.user);
-  const [referralCount, setReferralCount] = useState(0);
+  // Bug fix: read referral count from user object instead of stale local state that never updated
+  const referralCount = user?.referralCount ?? 0;
+  // Each successful referral earns $1 (one per friend)
+  const earnedAmount = (referralCount * 1).toFixed(2);
 
   const shareUrl = `https://snoozestake.com/r/${user?.referralCode}`;
 
@@ -60,7 +63,7 @@ export function ReferralScreen() {
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.accent }]}>
-            ${referralCount.toFixed(2)}
+            ${earnedAmount}
           </Text>
           <Text style={styles.statLabel}>Earned</Text>
         </View>

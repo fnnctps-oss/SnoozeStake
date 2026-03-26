@@ -118,7 +118,7 @@ export function SocialFeedScreen({ navigation }: any) {
 
       <FlatList
         data={feed}
-        keyExtractor={(_, i) => String(i)}
+        keyExtractor={(item, i) => item.id ?? `${item.userId}-${item.timestamp}-${i}`}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryLight} />

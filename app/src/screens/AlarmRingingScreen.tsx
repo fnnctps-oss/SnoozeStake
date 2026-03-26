@@ -200,9 +200,10 @@ export function AlarmRingingScreen({ navigation, route }: any) {
         >
           <Text style={styles.snoozeButtonText}>SNOOZE</Text>
           <Text style={styles.snoozeCost}>${nextCost.toFixed(2)}</Text>
-          {alarm?.useEscalatingPenalty && snoozeCount < (alarm.maxSnoozes || 5) - 1 && (
+          {/* Bug fix: show next cost warning only when there IS a subsequent snooze available */}
+          {alarm?.useEscalatingPenalty && snoozeCount + 1 < (alarm.maxSnoozes || 5) && (
             <Text style={styles.nextWarning}>
-              Next: ${(basePenalty * Math.pow(2, snoozeCount + 1)).toFixed(2)}
+              Next snooze: ${(basePenalty * Math.pow(2, snoozeCount + 1)).toFixed(2)}
             </Text>
           )}
         </TouchableOpacity>

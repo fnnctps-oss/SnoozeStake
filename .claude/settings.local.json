@@ -55,7 +55,13 @@
       "Bash(cp \"/Users/feynman/Desktop/Gentle wake.mp3\" /Users/feynman/Documents/SboozeStake/app/assets/tones/gentle.mp3)",
       "Bash(cp \"/Users/feynman/Desktop/Morning birds.mp3\" /Users/feynman/Documents/SboozeStake/app/assets/tones/birds.mp3)",
       "Bash(cp \"/Users/feynman/Desktop/ocean waves.mp3\" /Users/feynman/Documents/SboozeStake/app/assets/tones/ocean.mp3)",
-      "Bash(curl -s http://localhost:3000/api/health)"
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(find /Users/feynman/Documents/SboozeStake/app/src -type f -name *.tsx)",
+      "Bash(find /Users/feynman/Documents/SboozeStake/app/app -type f -name *.tsx)",
+      "Bash(pkill -f \"expo start\")",
+      "Bash(sed -n '95,105p' /Users/feynman/Documents/SboozeStake/app/src/screens/DashboardScreen.tsx)",
+      "Bash(sed -n '60,70p' /Users/feynman/Documents/SboozeStake/app/src/screens/GroupDetailScreen.tsx)",
+      "Bash(sed -n '118,130p' /Users/feynman/Documents/SboozeStake/app/src/screens/AlarmListScreen.tsx)"
     ]
   }
 }

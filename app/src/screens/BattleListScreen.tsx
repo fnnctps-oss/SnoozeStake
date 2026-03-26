@@ -29,7 +29,9 @@ export function BattleListScreen({ navigation }: any) {
     try {
       const { battles: data } = await battleApi.list();
       setBattles(data);
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load battles:', err);
+    }
   };
 
   useEffect(() => { load(); }, []);

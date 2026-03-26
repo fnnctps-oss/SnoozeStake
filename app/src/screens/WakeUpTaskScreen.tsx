@@ -54,9 +54,12 @@ function getTypingSentence(difficulty: string): string {
 
 // ===== MAIN COMPONENT =====
 export function WakeUpTaskScreen({ navigation, route }: any) {
-  const { alarm, snoozeCount, totalPenalty } = route.params;
-  const taskType = alarm.wakeUpTaskType || 'MATH';
-  const difficulty = alarm.wakeUpTaskDifficulty || 'EASY';
+  // Bug fix: safe-extract route params to prevent crash when params are missing
+  const alarm = route.params?.alarm ?? null;
+  const snoozeCount = route.params?.snoozeCount ?? 0;
+  const totalPenalty = route.params?.totalPenalty ?? 0;
+  const taskType = alarm?.wakeUpTaskType || 'MATH';
+  const difficulty = alarm?.wakeUpTaskDifficulty || 'EASY';
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
 
@@ -94,6 +97,18 @@ export function WakeUpTaskScreen({ navigation, route }: any) {
       { text: 'OK', onPress: () => navigation.popToTop() },
     ]);
   };
+
+  // Bug fix: guard against missing alarm data
+  if (!alarm) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>No alarm data found.</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={() => navigation.popToTop()}>
+          <Text style={styles.submitText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (taskType === 'MATH') return <MathTask difficulty={difficulty} onComplete={completeTask} />;
   if (taskType === 'SHAKE_PHONE') return <ShakeTask difficulty={difficulty} onComplete={completeTask} />;
@@ -182,6 +197,11 @@ function ShakeTask({ difficulty, onComplete }: { difficulty: string; onComplete:
   const [shakeTime, setShakeTime] = useState(0);
   const shakeTimeRef = useRef(0);
   const threshold = 2.5;
+  // Bug fix: store latest callback in ref so the effect doesn't need it as a dep
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const targetDurationRef = useRef(targetDuration);
+  targetDurationRef.current = targetDuration;
 
   useEffect(() => {
     const sub = Accelerometer.addListener(({ x, y, z }) => {
@@ -189,14 +209,15 @@ function ShakeTask({ difficulty, onComplete }: { difficulty: string; onComplete:
       if (magnitude > threshold) {
         shakeTimeRef.current += 0.1;
         setShakeTime(Math.floor(shakeTimeRef.current));
-        if (shakeTimeRef.current >= targetDuration) {
+        if (shakeTimeRef.current >= targetDurationRef.current) {
           sub.remove();
-          onComplete();
+          onCompleteRef.current();
         }
       }
     });
     Accelerometer.setUpdateInterval(100);
     return () => sub.remove();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const progress = Math.min(shakeTime / targetDuration, 1);
@@ -269,24 +290,30 @@ function WalkTask({ difficulty, onComplete }: { difficulty: string; onComplete: 
   const targetSteps = difficulty === 'EASY' ? 20 : difficulty === 'MEDIUM' ? 50 : 100;
   const [steps, setSteps] = useState(0);
   const [available, setAvailable] = useState(true);
+  // Bug fix: store latest callback and targetSteps in refs so effect doesn't need them as deps
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const targetStepsRef = useRef(targetSteps);
+  targetStepsRef.current = targetSteps;
 
   useEffect(() => {
+    let sub: any = null;
     Pedometer.isAvailableAsync().then((avail) => {
       if (!avail) {
         setAvailable(false);
         return;
       }
-
-      const sub = Pedometer.watchStepCount((result) => {
+      sub = Pedometer.watchStepCount((result) => {
         setSteps(result.steps);
-        if (result.steps >= targetSteps) {
-          sub.remove();
-          onComplete();
+        if (result.steps >= targetStepsRef.current) {
+          sub?.remove();
+          onCompleteRef.current();
         }
       });
-
-      return () => sub.remove();
     });
+    // Bug fix: cleanup now works correctly since sub is in outer scope
+    return () => { sub?.remove(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!available) {

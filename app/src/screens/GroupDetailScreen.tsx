@@ -30,7 +30,9 @@ export function GroupDetailScreen({ route, navigation }: any) {
       setLeaderboard(data.leaderboard || []);
       setActivity(data.recentActivity || []);
       setMyRole(data.myRole || '');
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load group detail:', err);
+    }
     setLoading(false);
   };
 
@@ -60,7 +62,9 @@ export function GroupDetailScreen({ route, navigation }: any) {
       await Share.share({
         message: `Join my SnoozeStake group "${group.name}"! Use invite code: ${group.inviteCode}`,
       });
-    } catch {}
+    } catch (err) {
+      console.warn('Share failed:', err);
+    }
   };
 
   if (loading) {

@@ -342,7 +342,8 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       penaltyDestination: 'SAVINGS',
       noEscapeMode: noEscape,
       snoozeDurationMinutes: snoozeDuration,
-      soundUrl: selectedTone === 'custom' ? customToneUri : selectedTone,
+      // Bug fix: if custom tone selected but no file picked yet, fall back to 'classic'
+      soundUrl: selectedTone === 'custom' ? (customToneUri ?? 'classic') : selectedTone,
     };
 
     setSaving(true);
@@ -568,7 +569,9 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           value={String(snoozeDuration)}
           onChangeText={(text) => {
             const cleaned = text.replace(/[^0-9]/g, '');
-            setSnoozeDuration(cleaned ? parseInt(cleaned, 10) : 0);
+            // Bug fix: guard against NaN from parseInt and keep value in valid range
+            const parsed = cleaned ? parseInt(cleaned, 10) : 1;
+            if (!isNaN(parsed)) setSnoozeDuration(Math.max(1, Math.min(30, parsed)));
           }}
           onBlur={() => {
             if (snoozeDuration < 1) setSnoozeDuration(1);

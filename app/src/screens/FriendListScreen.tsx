@@ -19,14 +19,13 @@ export function FriendListScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
-    try {
-      const [{ friends: f }, { pending: p }] = await Promise.all([
-        friendApi.list(),
-        friendApi.pending(),
-      ]);
-      setFriends(f);
-      setPending(p);
-    } catch {}
+    // Bug fix: Promise.allSettled so one failure doesn't block the other from loading
+    const [friendsResult, pendingResult] = await Promise.allSettled([
+      friendApi.list(),
+      friendApi.pending(),
+    ]);
+    if (friendsResult.status === 'fulfilled') setFriends(friendsResult.value.friends ?? []);
+    if (pendingResult.status === 'fulfilled') setPending(pendingResult.value.pending ?? []);
   };
 
   useEffect(() => { load(); }, []);
