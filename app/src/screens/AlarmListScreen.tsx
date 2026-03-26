@@ -17,6 +17,7 @@ import { Alarm } from '../types';
 import { Icon } from '../components/Icon';
 import { GradientBackground } from '../components/GradientBackground';
 import { scheduleAlarmNotifications, cancelAlarmNotifications } from '../services/notifications';
+import { hapticMedium, hapticHeavy, hapticLight } from '../utils/haptics';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -45,7 +46,7 @@ function AlarmCard({
       : activeDays.join(', ');
 
   return (
-    <TouchableOpacity activeOpacity={0.75} onPress={onPress}>
+    <TouchableOpacity activeOpacity={0.75} onPress={() => { hapticLight(); onPress(); }}>
       <View style={[styles.cardOuter, !item.isEnabled && styles.cardDisabled]}>
         {/* Real blur layer — the core of the glass effect */}
         <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
@@ -67,7 +68,7 @@ function AlarmCard({
             </View>
             <Switch
               value={item.isEnabled}
-              onValueChange={onToggle}
+              onValueChange={() => { hapticMedium(); onToggle(); }}
               trackColor={{
                 false: 'rgba(255,255,255,0.20)',
                 true: 'rgba(255,255,255,0.45)',
@@ -183,7 +184,7 @@ export function AlarmListScreen({ navigation }: any) {
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CreateAlarm')} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.fab} onPress={() => { hapticHeavy(); navigation.navigate('CreateAlarm'); }} activeOpacity={0.85}>
         <LinearGradient
           colors={['#A855F7', '#6C3CE1']}
           start={{ x: 0, y: 0 }}

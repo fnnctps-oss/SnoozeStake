@@ -20,6 +20,7 @@ import { WakeUpTaskType, TaskDifficulty, PenaltyDestination } from '../types';
 import { Icon } from '../components/Icon';
 import { scheduleAlarmNotifications, cancelAlarmNotifications, requestNotificationPermissions } from '../services/notifications';
 import { GradientBackground } from '../components/GradientBackground';
+import { hapticScroll, hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticWarning } from '../utils/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -83,8 +84,8 @@ function ScrollPicker({
     const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
     if (data[clampedIndex] !== selectedValue) {
       onValueChange(data[clampedIndex]);
+      hapticScroll(); // haptic + glassy tick on value change
     }
-    // Snap to nearest item
     scrollRef.current?.scrollTo({ y: clampedIndex * ITEM_HEIGHT, animated: true });
   };
 
@@ -108,6 +109,7 @@ function ScrollPicker({
               key={`${item}-${index}`}
               style={[pickerStyles.item, { height: ITEM_HEIGHT }]}
               onPress={() => {
+                hapticScroll();
                 onValueChange(item);
                 scrollRef.current?.scrollTo({ y: index * ITEM_HEIGHT, animated: true });
               }}
@@ -421,13 +423,13 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           <View style={styles.ampmContainer}>
             <TouchableOpacity
               style={[styles.ampmButton, period === 'AM' && styles.ampmActive]}
-              onPress={() => setPeriod('AM')}
+              onPress={() => { hapticMedium(); setPeriod('AM'); }}
             >
               <Text style={[styles.ampmText, period === 'AM' && styles.ampmTextActive]}>AM</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.ampmButton, period === 'PM' && styles.ampmActive]}
-              onPress={() => setPeriod('PM')}
+              onPress={() => { hapticMedium(); setPeriod('PM'); }}
             >
               <Text style={[styles.ampmText, period === 'PM' && styles.ampmTextActive]}>PM</Text>
             </TouchableOpacity>
@@ -451,7 +453,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           <TouchableOpacity
             key={d}
             style={[styles.dayButton, selectedDays.includes(i) && styles.daySelected]}
-            onPress={() => toggleDay(i)}
+            onPress={() => { hapticLight(); toggleDay(i); }}
           >
             <Text style={[styles.dayText, selectedDays.includes(i) && styles.dayTextSelected]}>
               {d}
@@ -467,7 +469,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           <TouchableOpacity
             key={tone.id}
             style={[styles.toneItem, selectedTone === tone.id && styles.toneItemSelected]}
-            onPress={() => setSelectedTone(tone.id)}
+            onPress={() => { hapticLight(); setSelectedTone(tone.id); }}
           >
             <View style={[styles.toneRadio, selectedTone === tone.id && styles.toneRadioActive]}>
               {selectedTone === tone.id && <View style={styles.toneRadioDot} />}
@@ -552,7 +554,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         </View>
         <Switch
           value={escalating}
-          onValueChange={setEscalating}
+          onValueChange={(v) => { hapticMedium(); setEscalating(v); }}
           trackColor={{ false: colors.surfaceLight, true: colors.danger + '80' }}
           thumbColor={escalating ? colors.danger : colors.textMuted}
         />
@@ -586,7 +588,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           <TouchableOpacity
             key={t.value}
             style={[styles.taskButton, taskType === t.value && styles.optionSelected]}
-            onPress={() => setTaskType(t.value)}
+            onPress={() => { hapticLight(); setTaskType(t.value); }}
           >
             <Icon
               name={t.icon}
@@ -606,7 +608,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
           <TouchableOpacity
             key={d}
             style={[styles.optionButton, difficulty === d && styles.optionSelected]}
-            onPress={() => setDifficulty(d)}
+            onPress={() => { hapticLight(); setDifficulty(d); }}
           >
             <Text style={[styles.optionText, difficulty === d && styles.optionTextSelected]}>
               {d}
@@ -623,7 +625,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
         </View>
         <Switch
           value={noEscape}
-          onValueChange={setNoEscape}
+          onValueChange={(v) => { hapticMedium(); setNoEscape(v); }}
           trackColor={{ false: colors.surfaceLight, true: colors.danger + '80' }}
           thumbColor={noEscape ? colors.danger : colors.textMuted}
         />
@@ -632,7 +634,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       {/* ─── Save / Delete ─── */}
       <TouchableOpacity
         style={[styles.saveButton, saving && styles.saveDisabled]}
-        onPress={handleSave}
+        onPress={() => { hapticHeavy(); handleSave(); }}
         disabled={saving}
       >
         <Icon name={existingAlarm ? 'checkmark-circle-outline' : 'add-circle-outline'} size={22} color={colors.background} />
@@ -642,7 +644,7 @@ export function CreateAlarmScreen({ navigation, route }: any) {
       </TouchableOpacity>
 
       {existingAlarm && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => { hapticWarning(); handleDelete(); }}>
           <Icon name="trash-outline" size={20} color={colors.danger} />
           <Text style={styles.deleteText}>Delete Alarm</Text>
         </TouchableOpacity>
