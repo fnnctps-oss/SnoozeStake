@@ -210,15 +210,16 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    // Shadow for depth
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
+    borderColor: 'rgba(139, 92, 246, 0.30)',
+    // Purple glow shadow beneath card
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
   },
   cardTint: {
-    backgroundColor: 'rgba(255,255,255,0.13)',
+    // Purple-tinted frosted overlay — this is what makes it glow purple
+    backgroundColor: 'rgba(108, 60, 225, 0.18)',
   },
   cardGloss: {
     position: 'absolute',
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.30)',
+    backgroundColor: 'rgba(255,255,255,0.28)',
     zIndex: 2,
   },
   cardInner: {
