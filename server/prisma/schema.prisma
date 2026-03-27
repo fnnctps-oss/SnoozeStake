@@ -53,8 +53,6 @@ model Alarm {
   wakeUpTaskType        WakeUpTaskType     @default(NONE)
   wakeUpTaskDifficulty  TaskDifficulty     @default(EASY)
   penaltyDestination    PenaltyDestination @default(SAVINGS)
-  charityId             String?
-  friendRecipientId     String?
   noEscapeMode          Boolean            @default(false)
   soundUrl              String?
   vibrationPattern      String?
@@ -62,7 +60,6 @@ model Alarm {
   updatedAt             DateTime           @updatedAt
 
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  charity         Charity?      @relation(fields: [charityId], references: [id])
   snoozeEvents    SnoozeEvent[]
   wakeUpEvents    WakeUpEvent[]
 
@@ -79,13 +76,10 @@ model SnoozeEvent {
   platformFee       Decimal            @db.Decimal(10, 2)
   recipientAmount   Decimal            @db.Decimal(10, 2)
   destination       PenaltyDestination
-  charityId         String?
-  friendRecipientId String?
   status            PaymentStatus      @default(PENDING)
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   alarm   Alarm   @relation(fields: [alarmId], references: [id], onDelete: Cascade)
-  charity Charity? @relation(fields: [charityId], references: [id])
 
   @@index([userId])
   @@index([alarmId])
@@ -105,18 +99,6 @@ model WakeUpEvent {
   alarm Alarm @relation(fields: [alarmId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-}
-
-model Charity {
-  id          String  @id @default(uuid())
-  name        String
-  description String
-  logoUrl     String
-  category    String
-  isActive    Boolean @default(true)
-
-  alarms       Alarm[]
-  snoozeEvents SnoozeEvent[]
 }
 
 model SnoozeBattle {
@@ -225,8 +207,6 @@ enum TaskDifficulty {
 
 enum PenaltyDestination {
   SAVINGS
-  CHARITY
-  FRIEND
 }
 
 enum PaymentStatus {
@@ -252,8 +232,6 @@ enum TransactionType {
   WALLET_TOPUP
   SNOOZE_PENALTY
   SAVINGS_WITHDRAWAL
-  FRIEND_TRANSFER
-  CHARITY_DONATION
   BATTLE_BET
   BATTLE_WIN
   REFUND

@@ -25,7 +25,10 @@ walletRouter.get('/', async (req: AuthRequest, res, next) => {
       select: { walletBalance: true, totalSnoozed: true, totalSaved: true },
     });
     if (!user) throw new AppError(404, 'User not found');
-    res.json(user);
+    res.json({
+      ...user,
+      canWithdraw: Number(user.totalSaved) >= 10,
+    });
   } catch (err) {
     next(err);
   }
@@ -109,6 +112,68 @@ walletRouter.post('/topup/confirm', async (req: AuthRequest, res, next) => {
     });
 
     res.json({ walletBalance: updatedUser.walletBalance });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/wallet/withdraw — Withdraw savings to bank ($10 minimum)
+const withdrawSchema = z.object({
+  amount: z.number().min(10, 'Minimum withdrawal is $10.00'),
+});
+
+walletRouter.post('/withdraw', async (req: AuthRequest, res, next) => {
+  try {
+    const { amount } = withdrawSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+    if (!user) throw new AppError(404, 'User not found');
+
+    if (Number(user.totalSaved) < 10) {
+      throw new AppError(400, 'Minimum withdrawal threshold is $10.00');
+    }
+
+    if (Number(user.totalSaved) < amount) {
+      throw new AppError(400, 'Insufficient savings balance');
+    }
+
+    if (!user.stripeCustomerId) {
+      throw new AppError(400, 'No payment method on file. Please add a bank account first.');
+    }
+
+    // Create Stripe payout/transfer to user's bank
+    const transfer = await stripe.transfers.create({
+      amount: Math.round(amount * 100), // cents
+      currency: 'usd',
+      destination: user.stripeCustomerId,
+      metadata: { userId: user.id, type: 'SAVINGS_WITHDRAWAL' },
+    });
+
+    // Deduct from savings and record transaction atomically
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      await tx.transaction.create({
+        data: {
+          userId: user.id,
+          type: 'SAVINGS_WITHDRAWAL',
+          amount,
+          stripePaymentIntentId: transfer.id,
+          status: 'COMPLETED',
+          description: `Savings withdrawal: $${amount.toFixed(2)}`,
+        },
+      });
+
+      return tx.user.update({
+        where: { id: user.id },
+        data: { totalSaved: { decrement: amount } },
+      });
+    });
+
+    res.json({
+      totalSaved: updatedUser.totalSaved,
+      canWithdraw: Number(updatedUser.totalSaved) >= 10,
+      withdrawnAmount: amount,
+      transferId: transfer.id,
+    });
   } catch (err) {
     next(err);
   }

@@ -19,9 +19,7 @@ const createAlarmSchema = z.object({
   snoozeDurationMinutes: z.number().min(1).max(30).optional(),
   wakeUpTaskType: z.enum(['NONE', 'MATH', 'QR_SCAN', 'PHOTO_SUNLIGHT', 'WALK_STEPS', 'SHAKE_PHONE', 'BARCODE_SCAN', 'TYPING_TEST']).optional(),
   wakeUpTaskDifficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional(),
-  penaltyDestination: z.enum(['SAVINGS', 'CHARITY', 'FRIEND']).optional(),
-  charityId: z.string().uuid().optional(),
-  friendRecipientId: z.string().uuid().optional(),
+  penaltyDestination: z.enum(['SAVINGS']).optional(),
   noEscapeMode: z.boolean().optional(),
   soundUrl: z.string().optional(),
 });

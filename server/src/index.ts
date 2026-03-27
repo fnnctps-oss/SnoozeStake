@@ -10,7 +10,7 @@ import { snoozeRouter } from './routes/snooze';
 import { walletRouter } from './routes/wallet';
 import { statsRouter } from './routes/stats';
 import { friendRouter } from './routes/friends';
-import { charityRouter } from './routes/charities';
+// charities route removed — penalty destination is always SAVINGS
 import { battleRouter } from './routes/battles';
 import { groupRouter } from './routes/groups';
 import { feedRouter } from './routes/feed';
@@ -46,7 +46,6 @@ app.use('/api/snooze', snoozeRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/friends', friendRouter);
-app.use('/api/charities', charityRouter);
 app.use('/api/battles', battleRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/feed', feedRouter);

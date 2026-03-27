@@ -1,5 +1,4 @@
 import { Decimal } from '@prisma/client/runtime/library';
-import { PenaltyDestination } from '@prisma/client';
 
 interface PenaltyCalculation {
   rawPenalty: Decimal;
@@ -60,12 +59,7 @@ export class PenaltyService {
   /**
    * Get a human-readable description of the penalty split.
    */
-  static getSplitDescription(destination: PenaltyDestination): string {
-    const destLabel =
-      destination === 'SAVINGS' ? 'your savings jar' :
-      destination === 'CHARITY' ? 'charity' :
-      'your friend';
-
-    return `75% goes to ${destLabel}, 25% platform fee`;
+  static getSplitDescription(): string {
+    return '75% goes to your savings jar, 25% platform fee';
   }
 }

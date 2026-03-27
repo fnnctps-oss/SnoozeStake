@@ -72,9 +72,7 @@ snoozeRouter.post('/', async (req: AuthRequest, res, next) => {
           penaltyAmount: rawPenalty,
           platformFee,
           recipientAmount,
-          destination: alarm.penaltyDestination,
-          charityId: alarm.charityId,
-          friendRecipientId: alarm.friendRecipientId,
+          destination: 'SAVINGS',
           status: 'COMPLETED',
         },
       });
@@ -87,32 +85,15 @@ snoozeRouter.post('/', async (req: AuthRequest, res, next) => {
           amount: rawPenalty,
           platformFee,
           status: 'COMPLETED',
-          description: `Snooze #${body.snoozeNumber} on "${alarm.label}" — ${PenaltyService.getSplitDescription(alarm.penaltyDestination)}`,
+          description: `Snooze #${body.snoozeNumber} on "${alarm.label}" — 75% to savings, 25% platform fee`,
         },
       });
 
-      // Route 75% to destination
-      if (alarm.penaltyDestination === 'SAVINGS') {
-        await tx.user.update({
-          where: { id: user.id },
-          data: { totalSaved: { increment: recipientAmount } },
-        });
-      } else if (alarm.penaltyDestination === 'FRIEND' && alarm.friendRecipientId) {
-        await tx.user.update({
-          where: { id: alarm.friendRecipientId },
-          data: { walletBalance: { increment: recipientAmount } },
-        });
-        await tx.transaction.create({
-          data: {
-            userId: alarm.friendRecipientId,
-            type: 'FRIEND_TRANSFER',
-            amount: recipientAmount,
-            status: 'COMPLETED',
-            description: `Received from ${user.displayName}'s snooze penalty`,
-          },
-        });
-      }
-      // CHARITY: queued for batch processing
+      // Route 75% to user's savings
+      await tx.user.update({
+        where: { id: user.id },
+        data: { totalSaved: { increment: recipientAmount } },
+      });
 
       return { snoozeEvent, updatedUser };
     });

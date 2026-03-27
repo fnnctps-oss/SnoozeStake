@@ -152,35 +152,3 @@ sharingRouter.post('/battle-card', async (req: AuthRequest, res, next) => {
   }
 });
 
-// POST /api/share/charity-card
-sharingRouter.post('/charity-card', async (req: AuthRequest, res, next) => {
-  try {
-    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
-    if (!user) throw new AppError(404, 'User not found');
-
-    const donations = await prisma.snoozeEvent.findMany({
-      where: {
-        userId: req.userId!,
-        destination: 'CHARITY',
-        status: 'COMPLETED',
-      },
-      include: { charity: true },
-    });
-
-    const totalDonated = donations.reduce((sum, d) => sum + Number(d.recipientAmount), 0);
-    const topCharity = donations[0]?.charity?.name || 'Charity';
-
-    const imageBuffer = CardGenerator.generateCharityCard({
-      displayName: user.displayName,
-      referralCode: user.referralCode,
-      totalDonated,
-      charityName: topCharity,
-      period: `${new Date().getFullYear()}`,
-    });
-
-    res.set('Content-Type', 'image/png');
-    res.send(imageBuffer);
-  } catch (err) {
-    next(err);
-  }
-});
